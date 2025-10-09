@@ -15,6 +15,13 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
         {
             if (file.Root is not UniversalFpgaProjectRoot root) {throw new Exception("File is not in a suitable Project");}
             
+            var projectPath = root.FullPath;
+            var vhdlFilePath = Directory.GetFiles(projectPath, "mem_init_package.vhd", SearchOption.AllDirectories).FirstOrDefault("");
+            if (vhdlFilePath.Length == 0)
+            {
+                throw new Exception("mem_init_package.vhd not found");
+            }
+            
             var header =
                 "library ieee;\nuse ieee.std_logic_1164.all;\n\npackage svnr_memory_image is\n    constant address_size : integer := 10;  -- ram_adddress breite\n    type mem_type is array (0 to (2**address_size)-1) of std_logic_vector(15 downto 0);\n\n    constant mem_init_image : mem_type := (\n";
             var tail = "    );\n\nend svnr_memory_image;";
@@ -38,7 +45,7 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
 
                     if (i > asmCommand.address)
                     {
-                        throw new Exception("Illegal address order: " + asmCommand.address.ToString("X") + " came after " + i.ToString("X"));
+                        throw new Exception("Illegal address order: " + asmCommand.address.ToString("X") + " came after " + (i-1).ToString("X"));
                     }
 
                     while (i < asmCommand.address)
@@ -49,13 +56,6 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
 
                     ramValues[i] = asmCommand.command;
                 }
-            }
-
-            var projectPath = root.FullPath;
-            var vhdlFilePath = Directory.GetFiles(projectPath, "mem_init_package.vhd", SearchOption.AllDirectories).First();
-            if (vhdlFilePath.Length == 0)
-            {
-                throw new Exception("mem_init_package.vhd not found");
             }
 
             await using (var vhdlWriter = new StreamWriter(vhdlFilePath))

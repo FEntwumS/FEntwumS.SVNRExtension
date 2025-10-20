@@ -127,16 +127,25 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
         var splitString = line.Split([ ':', ';' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         var address = Convert.ToInt16(splitString[0], 16);
         
-        var opCode = splitString[1].Substring(0, splitString[1].Length - 2);
-        if (commandTable.ContainsKey(opCode.ToUpper()))
+        var opCode = splitString[1].Substring(0, splitString[1].Length - 2).ToUpper();
+        if (commandTable.ContainsKey(opCode))
         {
-            opCode = commandTable[opCode.ToUpper()];
+            opCode = commandTable[opCode];
         }
         
         var operand = splitString[1].Substring(splitString[1].Length - 2);
         var command = opCode + operand;
+        var invalidChars = false;
 
-        if (command.Length != 4)
+        foreach (var c in command)
+        {
+            if (!Uri.IsHexDigit(c))
+            {
+                invalidChars = true;
+            }
+        }
+        
+        if (command.Length != 4 || invalidChars)
         {
             throw new Exception("Invalid command: '" + splitString[0] + ": " + splitString[1] + "'");
         }

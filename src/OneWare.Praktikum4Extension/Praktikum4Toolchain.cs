@@ -40,5 +40,5 @@ public class Praktikum4Toolchain(AsmToVhdlPreCompileStep asmPreCompiler, GhdlYos
         }
     }
 
-    public string Name => "Praktikum4Toolchain";
+    public string Name => "Praktikum_4";
 }

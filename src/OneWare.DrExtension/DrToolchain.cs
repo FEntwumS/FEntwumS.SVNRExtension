@@ -5,9 +5,9 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 
-namespace OneWare.Praktikum4Extension;
+namespace OneWare.DrExtension;
 
-public class Praktikum4Toolchain(AsmToVhdlPreCompileStep asmPreCompiler, GhdlYosysToolchain ghdlToolchain, GhdlService ghdlService) : IFpgaToolchain
+public class DrToolchain(AsmToVhdlPreCompileStep asmPreCompiler, GhdlYosysToolchain ghdlToolchain, GhdlService ghdlService) : IFpgaToolchain
 {
     public void OnProjectCreated(UniversalFpgaProjectRoot project)
     {

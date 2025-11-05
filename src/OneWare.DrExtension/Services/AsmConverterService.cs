@@ -2,7 +2,7 @@
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
-namespace OneWare.Praktikum4Extension.Services;
+namespace OneWare.DrExtension.Services;
 
 public class AsmConverterService(ILogger logger, IOutputService outputService)
 {

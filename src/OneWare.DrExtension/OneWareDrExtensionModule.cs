@@ -2,20 +2,20 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Layout;
 using CommunityToolkit.Mvvm.Input;
+using OneWare.DrExtension.Services;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
 using OneWare.OssCadSuiteIntegration.ViewModels;
 using OneWare.OssCadSuiteIntegration.Views;
-using OneWare.Praktikum4Extension.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 
-namespace OneWare.Praktikum4Extension;
+namespace OneWare.DrExtension;
 
-public class OneWarePraktikum4ExtensionModule : IModule
+public class OneWareDrExtensionModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
@@ -41,7 +41,7 @@ public class OneWarePraktikum4ExtensionModule : IModule
         });
         
         containerProvider.Resolve<FpgaService>().RegisterPreCompileStep<AsmToVhdlPreCompileStep>();
-        containerProvider.Resolve<FpgaService>().RegisterToolchain<Praktikum4Toolchain>();
+        containerProvider.Resolve<FpgaService>().RegisterToolchain<DrToolchain>();
         
         /*
         var ghdlPreCompiler = containerProvider.Resolve<AsmToVhdlPreCompileStep>();

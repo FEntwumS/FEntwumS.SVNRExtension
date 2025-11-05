@@ -8,6 +8,7 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <SelfContained>false</SelfContained>
+        <RootNamespace>OneWare.Praktikum4Extension</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

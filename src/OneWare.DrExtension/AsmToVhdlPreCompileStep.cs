@@ -1,9 +1,9 @@
-﻿using OneWare.Essentials.Services;
-using OneWare.Praktikum4Extension.Services;
+﻿using OneWare.DrExtension.Services;
+using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
-namespace OneWare.Praktikum4Extension;
+namespace OneWare.DrExtension;
 
 public class AsmToVhdlPreCompileStep(AsmConverterService converterService, ILogger logger) : IFpgaPreCompileStep
 {

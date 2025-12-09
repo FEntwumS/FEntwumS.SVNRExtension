@@ -2,14 +2,14 @@ using CommunityToolkit.Mvvm.Input;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
-using OneWare.Praktikum4Extension.Services;
+using OneWare.SVNRExtension.Services;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 
-namespace OneWare.Praktikum4Extension;
+namespace OneWare.SVNRExtension;
 
-public class OneWarePraktikum4ExtensionModule : IModule
+public class OneWareSVNRExtensionModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

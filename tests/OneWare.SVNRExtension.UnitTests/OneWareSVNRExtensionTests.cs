@@ -1,8 +1,8 @@
 ﻿using Xunit;
 
-namespace OneWare.Praktikum4Extension.UnitTests;
+namespace OneWare.SVNRExtension.UnitTests;
 
-public class OneWarePraktikum4ExtentionTests
+public class OneWareSVNRExtensionTests
 {
     //Add your unit tests here
     

@@ -1,28 +1,28 @@
 {
   "category": "Tools",
   "type": "Plugin",
-  "name": "OneWare.Praktikum4Extention Extension",
-  "id": "OneWare.Praktikum4Extention",
-  "description": "OneWare.Praktikum4Extention for OneWare",
+  "name": "OneWare.SVNRExtension Extension",
+  "id": "OneWare.SVNRExtension",
+  "description": "OneWare.SVNRExtension for OneWare",
   "license": "MIT",
-  "iconUrl": "https://raw.githubusercontent.com/MPloemac/OneWare.Praktikum4Extention/main/Icon.png",
+  "iconUrl": "https://raw.githubusercontent.com/MPloemac/OneWare.SVNRExtension/main/Icon.png",
   "tabs": [
     {
       "title": "Readme",
-      "contentUrl": "https://raw.githubusercontent.com/MPloemac/OneWare.Praktikum4Extention/main/Extension.md"
+      "contentUrl": "https://raw.githubusercontent.com/MPloemac/OneWare.SVNRExtension/main/Extension.md"
     },
     {
       "title": "License",
-      "contentUrl": "https://raw.githubusercontent.com/MPloemac/OneWare.Praktikum4Extention/main/License.md"
+      "contentUrl": "https://raw.githubusercontent.com/MPloemac/OneWare.SVNRExtension/main/License.md"
     }
   ],
   "links": [
     {
       "name": "Github",
-      "url": "https://github.com/MPloemac/OneWare.Praktikum4Extention"
+      "url": "https://github.com/MPloemac/OneWare.SVNRExtension"
     }
   ],
-  "sourceUrl": "https://github.com/MPloemac/OneWare.Praktikum4Extention/releases/download",
+  "sourceUrl": "https://github.com/MPloemac/OneWare.SVNRExtension/releases/download",
   "versions": [
     {
       "version": "0.1",

@@ -1,16 +1,14 @@
-﻿using OneWare.Essentials.Services;
-using OneWare.GhdlExtension;
-using OneWare.GhdlExtension.Services;
+﻿using OneWare.DrExtension.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
-using Prism.Ioc;
 
 namespace OneWare.DrExtension;
 
-public class DrToolchain(AsmToVhdlPreCompileStep asmPreCompiler, GhdlYosysToolchain ghdlToolchain, GhdlService ghdlService) : IFpgaToolchain
+public class DrToolchain(GhdlToolchainService ghdlToolchain, DRToolchainService drToolchainService) : IFpgaToolchain
 {
     public void OnProjectCreated(UniversalFpgaProjectRoot project)
     {
+        ghdlToolchain.OnProjectCreated(project);
     }
 
     public void LoadConnections(UniversalFpgaProjectRoot project, FpgaModel fpga)
@@ -25,20 +23,8 @@ public class DrToolchain(AsmToVhdlPreCompileStep asmPreCompiler, GhdlYosysToolch
 
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
-        bool success = await asmPreCompiler.PerformPreCompileStepAsync(project, fpga);
-        if (!success) return false;
-
-        try
-        {
-            success = await ghdlToolchain.CompileAsync(project, fpga);
-            return success;
-        }
-        catch (Exception e)
-        {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-            return false;
-        }
+        return await drToolchainService.CompileAsync(project, fpga);
     }
 
-    public string Name => "Praktikum_4";
+    public string Name => "DR";
 }

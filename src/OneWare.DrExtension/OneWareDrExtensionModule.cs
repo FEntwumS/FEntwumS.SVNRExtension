@@ -15,11 +15,21 @@ using Prism.Modularity;
 
 namespace OneWare.DrExtension;
 
+/*TODO:
+ * Umbenennen zu "SVNR Extension"
+ * GitHub Links anpassen und Build hochladen
+ *
+ *
+ * Idee zu Rechtsklickmenu:
+ * Projekt-optionsfenster mit auto/manuell, manuell eingestellte Datei kann über Rechtsklickmenu geändert werden
+ */
+
 public class OneWareDrExtensionModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<AsmConverterService>();
+        containerRegistry.RegisterSingleton<DRToolchainService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
@@ -42,6 +52,7 @@ public class OneWareDrExtensionModule : IModule
         
         containerProvider.Resolve<FpgaService>().RegisterPreCompileStep<AsmToVhdlPreCompileStep>();
         containerProvider.Resolve<FpgaService>().RegisterToolchain<DrToolchain>();
+
         
         /*
         var ghdlPreCompiler = containerProvider.Resolve<AsmToVhdlPreCompileStep>();

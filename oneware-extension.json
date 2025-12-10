@@ -1,31 +1,31 @@
 {
   "category": "Tools",
   "type": "Plugin",
-  "name": "OneWare.SVNRExtension Extension",
+  "name": "SVNR Extension",
   "id": "OneWare.SVNRExtension",
-  "description": "OneWare.SVNRExtension for OneWare",
+  "description": "Assembly conversion Tool for a SVNR",
   "license": "MIT",
-  "iconUrl": "https://raw.githubusercontent.com/FEntwumS/OneWare.SVNRExtension/main/Icon.png",
+  "iconUrl": "https://raw.githubusercontent.com/FEntwumS/FEntwumS.SVNRExtension/main/Icon.png",
   "tabs": [
     {
       "title": "Readme",
-      "contentUrl": "https://raw.githubusercontent.com/FEntwumS/OneWare.SVNRExtension/main/Extension.md"
+      "contentUrl": "https://raw.githubusercontent.com/FEntwumS/FEntwumS.SVNRExtension/main/Extension.md"
     },
     {
       "title": "License",
-      "contentUrl": "https://raw.githubusercontent.com/FEntwumS/OneWare.SVNRExtension/main/License.md"
+      "contentUrl": "https://raw.githubusercontent.com/FEntwumS/FEntwumS.SVNRExtension/main/License.md"
     }
   ],
   "links": [
     {
       "name": "Github",
-      "url": "https://github.com/FEntwumS/OneWare.SVNRExtension"
+      "url": "https://github.com/FEntwumS/FEntwumS.SVNRExtension"
     }
   ],
-  "sourceUrl": "https://github.com/FEntwumS/OneWare.SVNRExtension/releases/download",
+  "sourceUrl": "https://github.com/FEntwumS/FEntwumS.SVNRExtension/releases/download",
   "versions": [
     {
-      "version": "0.1",
+      "version": "0.2",
       "targets": [
         {
           "target": "all"

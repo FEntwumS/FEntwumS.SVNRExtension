@@ -18,24 +18,24 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Get Version
         uses: kzrnm/get-net-sdk-project-versions-action@v1.3.0
         id: get-version
         with:
-          proj-path: src/OneWare.Praktikum4Extention/OneWare.Praktikum4Extention.csproj
+          proj-path: src/OneWare.SVNRExtension/OneWare.SVNRExtension.csproj
       - name: Build
-        run: dotnet build src/OneWare.Praktikum4Extention/OneWare.Praktikum4Extention.csproj -c Release -o publish
+        run: dotnet build src/OneWare.SVNRExtension/OneWare.SVNRExtension.csproj -c Release -o publish
       - name: Compress
         uses: thedoctor0/zip-release@0.7.1
         with:
           type: 'zip'
-          filename: ../OneWare.Praktikum4Extention_${{steps.get-version.outputs.version}}_all.zip
+          filename: ../OneWare.SVNRExtension_${{steps.get-version.outputs.version}}_all.zip
           directory: ./publish
       - name: Debug
         run: ls
       - uses: ncipollo/release-action@v1.14.0
         with:
-          artifacts: "OneWare.Praktikum4Extention_${{steps.get-version.outputs.version}}_all.zip,./publish/compatibility.txt"
+          artifacts: "OneWare.SVNRExtension_${{steps.get-version.outputs.version}}_all.zip,./publish/compatibility.txt"
           tag: ${{steps.get-version.outputs.version}}
           allowUpdates: true

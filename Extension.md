@@ -1,4 +1,4 @@
-![Icon](https://raw.githubusercontent.com/MPloemac/OneWare.Praktikum4Extention/main/Icon.png)
+![Icon](https://raw.githubusercontent.com/FEntwumS/OneWare.SVNRExtention/main/Icon.png)
 
 ### Get Started
 

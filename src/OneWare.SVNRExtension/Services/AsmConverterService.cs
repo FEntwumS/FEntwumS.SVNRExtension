@@ -2,7 +2,8 @@
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
-namespace OneWare.DrExtension.Services;
+
+namespace OneWare.SVNRExtension.Services;
 
 public class AsmConverterService(ILogger logger, IOutputService outputService)
 {

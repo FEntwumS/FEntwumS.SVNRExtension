@@ -8,7 +8,7 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <SelfContained>false</SelfContained>
-        <RootNamespace>OneWare.Praktikum4Extension</RootNamespace>
+        <RootNamespace>FentwumS.SVNRExtension</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="OneWare.GhdlExtension" Version="0.11.2" Private="true" ExcludeAssets="runtime;Native"/>
+        <PackageReference Include="OneWare.GhdlExtension" Version="0.12.0" Private="true" ExcludeAssets="runtime;Native" />
         <PackageReference Include="OneWare.Essentials" Version="0.11.11" Private="false" ExcludeAssets="runtime;Native" />
         <PackageReference Include="OneWare.OssCadSuiteIntegration" Version="0.41.11" Private="false" ExcludeAssets="runtime;Native" />
         <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="0.41.11" Private="false" ExcludeAssets="runtime;Native" />

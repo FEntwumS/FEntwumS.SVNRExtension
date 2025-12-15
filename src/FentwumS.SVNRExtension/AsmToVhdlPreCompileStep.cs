@@ -1,9 +1,9 @@
+﻿using FentwumS.SVNRExtension.Services;
 using OneWare.Essentials.Services;
-using OneWare.SVNRExtension.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
-namespace OneWare.SVNRExtension;
+namespace FentwumS.SVNRExtension;
 
 public class AsmToVhdlPreCompileStep(AsmConverterService converterService, ILogger logger) : IFpgaPreCompileStep
 {

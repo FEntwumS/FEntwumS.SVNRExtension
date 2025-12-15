@@ -1,8 +1,9 @@
+using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Media;
 using Avalonia.Layout;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
-using OneWare.DrExtension.Services;
+using FentwumS.SVNRExtension.Services;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -13,29 +14,26 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 
-namespace OneWare.DrExtension;
+namespace FentwumS.SVNRExtension;
 
 /*TODO:
- * Umbenennen zu "SVNR Extension"
- * GitHub Links anpassen und Build hochladen
- *
- *
  * Idee zu Rechtsklickmenu:
  * Projekt-optionsfenster mit auto/manuell, manuell eingestellte Datei kann über Rechtsklickmenu geändert werden
  */
 
-public class OneWareDrExtensionModule : IModule
+public class FentwumsSvnrExtensionModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {
         containerRegistry.RegisterSingleton<AsmConverterService>();
-        containerRegistry.RegisterSingleton<DRToolchainService>();
+        containerRegistry.RegisterSingleton<SvnrToolchainService>();
     }
 
     public void OnInitialized(IContainerProvider containerProvider)
     {
         var asmConverterService = containerProvider.Resolve<AsmConverterService>();
         var projectExplorerService = containerProvider.Resolve<IProjectExplorerService>();
+        var windowService = containerProvider.Resolve<IWindowService>();
         var fpgaService = containerProvider.Resolve<FpgaService>();
 
         containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
@@ -51,17 +49,15 @@ public class OneWareDrExtensionModule : IModule
         });
         
         containerProvider.Resolve<FpgaService>().RegisterPreCompileStep<AsmToVhdlPreCompileStep>();
-        containerProvider.Resolve<FpgaService>().RegisterToolchain<DrToolchain>();
+        containerProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
+        var svnrToolchainService = containerProvider.Resolve<SvnrToolchainService>();
         
-        /*
-        var ghdlPreCompiler = containerProvider.Resolve<AsmToVhdlPreCompileStep>();
-        var asmPreCompiler = containerProvider.Resolve<AsmToVhdlPreCompileStep>();
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
             new UiExtension(
                 x =>
                 {
-                    if (x is not UniversalFpgaProjectRoot { Toolchain: Praktikum4Toolchain } root) return null;
+                    if (x is not UniversalFpgaProjectRoot { Toolchain: SvnrToolchain } root) return null;
 
                     var name = root.Properties["Fpga"]?.ToString();
                     var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
@@ -77,23 +73,7 @@ public class OneWareDrExtensionModule : IModule
                                 Header = "Run Synthesis",
                                 Command = new AsyncRelayCommand(async () =>
                                 {
-                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                    var fpgaModel = new FpgaModel(fpga!); 
-                                    await asmPreCompiler.PerformPreCompileStepAsync(root, fpgaModel);
-                                    await ghdlPreCompiler.PerformPreCompileStepAsync(root, fpgaModel);
-                                    
-                                    try{
-                                        var verilogFileName = ghdlPreCompiler.VerilogFileName ?? throw new Exception("Invalid verilog file name!");
-                                        var ghdlOutputPath = Path.Combine(root.FullPath, ghdlPreCompiler.BuildDir,
-                                            ghdlPreCompiler.GhdlOutputDir, verilogFileName);
-                                        var mandatoryFileList = new List<string>(1) {ghdlOutputPath};
-                                        await yosysService.SynthAsync(root, new FpgaModel(fpga!), mandatoryFileList);
-                                    }
-                                    catch (Exception e)
-                                    { 
-                                        ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
-                                    }
-                                    
+                                    await svnrToolchainService.SynthAsync(root, new FpgaModel(fpga!));
                                 }, () => fpga != null)
                             },
                             new MenuItem()
@@ -101,8 +81,7 @@ public class OneWareDrExtensionModule : IModule
                                 Header = "Run Fit",
                                 Command = new AsyncRelayCommand(async () =>
                                 {
-                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                    await yosysService.FitAsync(root, new FpgaModel(fpga!));
+                                    await svnrToolchainService.FitAsync(root, new FpgaModel(fpga!));
                                 }, () => fpga != null)
                             },
                             new MenuItem()
@@ -110,8 +89,7 @@ public class OneWareDrExtensionModule : IModule
                                 Header = "Run Assemble",
                                 Command = new AsyncRelayCommand(async () =>
                                 {
-                                    await projectExplorerService.SaveOpenFilesForProjectAsync(root);
-                                    await yosysService.AssembleAsync(root, new FpgaModel(fpga!));
+                                    await svnrToolchainService.AssembleAsync(root, new FpgaModel(fpga!));
                                 }, () => fpga != null)
                             },
                             new Separator(),
@@ -152,6 +130,6 @@ public class OneWareDrExtensionModule : IModule
                         }
                     };
                 }));
-*/
+
     }
 }

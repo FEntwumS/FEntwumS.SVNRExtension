@@ -1,10 +1,11 @@
 ﻿using OneWare.Essentials.Services;
+using OneWare.GhdlExtension.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
 
-namespace OneWare.DrExtension.Services;
+namespace FentwumS.SVNRExtension.Services;
 
-public class DRToolchainService(GhdlToolchainService ghdlToolchain, AsmToVhdlPreCompileStep asmPreCompiler)
+public class SvnrToolchainService(GhdlToolchainService ghdlToolchain, AsmToVhdlPreCompileStep asmPreCompiler)
 {
     
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)

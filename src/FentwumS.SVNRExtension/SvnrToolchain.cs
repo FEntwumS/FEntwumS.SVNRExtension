@@ -1,10 +1,10 @@
-﻿using FentwumS.SVNRExtension.Services;
+﻿using FEntwumS.SVNRExtension.Services;
 using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 
-namespace FentwumS.SVNRExtension;
+namespace FEntwumS.SVNRExtension;
 
 public class SvnrToolchain(YosysToolchain yosysToolchain, IContainerProvider containerProvider) : IFpgaToolchain
 {

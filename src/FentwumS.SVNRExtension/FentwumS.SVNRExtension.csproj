@@ -8,7 +8,7 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <SelfContained>false</SelfContained>
-        <RootNamespace>FentwumS.SVNRExtension</RootNamespace>
+        <RootNamespace>FEntwumS.SVNRExtension</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

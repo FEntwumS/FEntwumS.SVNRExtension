@@ -2,11 +2,13 @@
 using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
+using Prism.Ioc;
 
 namespace FentwumS.SVNRExtension;
 
-public class SvnrToolchain(YosysToolchain yosysToolchain, SvnrToolchainService svnrToolchainService) : IFpgaToolchain
+public class SvnrToolchain(YosysToolchain yosysToolchain, IContainerProvider containerProvider) : IFpgaToolchain
 {
+    
     public void OnProjectCreated(UniversalFpgaProjectRoot project)
     {
         yosysToolchain.OnProjectCreated(project);
@@ -24,6 +26,8 @@ public class SvnrToolchain(YosysToolchain yosysToolchain, SvnrToolchainService s
 
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
+        var svnrToolchainService = containerProvider.Resolve<SvnrToolchainService>();
+        
         return await svnrToolchainService.CompileAsync(project, fpga);
     }
 

@@ -51,7 +51,8 @@ public class FentwumsSvnrExtensionModule : IModule
         containerProvider.Resolve<FpgaService>().RegisterPreCompileStep<AsmToVhdlPreCompileStep>();
         containerProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
-        var svnrToolchainService = containerProvider.Resolve<SvnrToolchainService>();
+        
+        
         
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
             new UiExtension(
@@ -62,6 +63,7 @@ public class FentwumsSvnrExtensionModule : IModule
                     var name = root.Properties["Fpga"]?.ToString();
                     var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
                     var fpga = fpgaPackage?.LoadFpga();
+                    var svnrToolchainService = containerProvider.Resolve<SvnrToolchainService>();
                     
                     return new StackPanel()
                     {

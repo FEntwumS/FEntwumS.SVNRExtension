@@ -23,9 +23,9 @@ jobs:
         uses: kzrnm/get-net-sdk-project-versions-action@v1.3.0
         id: get-version
         with:
-          proj-path: src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj
+          proj-path: src/FentwumS.SVNRExtension/FentwumS.SVNRExtension.csproj
       - name: Build
-        run: dotnet build src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj -c Release -o publish
+        run: dotnet build src/FentwumS.SVNRExtension/FentwumS.SVNRExtension.csproj -c Release -o publish
       - name: Compress
         uses: thedoctor0/zip-release@0.7.1
         with:

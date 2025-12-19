@@ -11,6 +11,7 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
     {
         outputService.WriteLine("Converting .asm file...");
         int i = 0;
+        long readLineCounter = 0;
         try
         {
             if (file.Root is not UniversalFpgaProjectRoot root) {throw new Exception("File is not in a suitable Project");}
@@ -29,9 +30,16 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
             
             using (var asmReader = new StreamReader(file.FullPath))
             {
+                
                 for (i = 0; i < 1024; i++)
                 {
-                    var asmCommand = await ExtractCommandAsync(asmReader);
+                    (bool eof, int address, string command) asmCommand;
+                    do
+                    {
+                        readLineCounter++;
+                        asmCommand = await ExtractCommandAsync(asmReader);
+                    } while (asmCommand.address == -1);
+                    
                     if (asmCommand.eof)
                     {
                         while (i < 1024)
@@ -72,7 +80,7 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
         }
         catch (Exception e)
         {
-            logger.Error("Conversion from Assembler to VHDL failed at line " + i + " : " + e.Message);
+            logger.Error("Conversion from Assembler to VHDL failed at line " + readLineCounter + " : " + e.Message);
             return false;
         }
         
@@ -113,16 +121,18 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
         };
         
         string? line;
-        do
+    
+        line = await reader.ReadLineAsync();
+        if (line == null)
         {
-            line = await reader.ReadLineAsync();
-            if (line == null)
-            {
-                return (true, 0, "");
-            }
-            line = line.Trim();
-        } 
-        while (line.Length == 0 || line[0] == '#' || line[0] == ';');
+            return (true, 0, "");
+        }
+
+        if (line.Length == 0 || line[0] == '#' || line[0] == ';')
+        {
+            return (false, -1, "");
+        }
+        line = line.Trim();
         //splitString contains the memory address at index 0 and the memory content at index 1. Every other index (if they exist) contain the full or parts of the in-line comment.
         var splitString = line.Split([ ':', ';' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         var address = Convert.ToInt16(splitString[0], 16);

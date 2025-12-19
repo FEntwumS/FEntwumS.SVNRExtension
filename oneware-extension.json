@@ -25,7 +25,7 @@
   "sourceUrl": "https://github.com/FEntwumS/FEntwumS.SVNRExtension/releases/download",
   "versions": [
     {
-      "version": "0.2.2",
+      "version": "0.3.0",
       "targets": [
         {
           "target": "all"

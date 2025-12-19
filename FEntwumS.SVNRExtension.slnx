@@ -4,5 +4,5 @@
     <File Path="License.md" />
     <File Path="oneware-extension.json" />
   </Folder>
-  <Project Path="src\FEntwumS.SVNRExtension\FEntwumS.SVNRExtension.csproj" />
+  <Project Path="src\FentwumS.SVNRExtension2\FentwumS.SVNRExtension2.csproj" />
 </Solution>

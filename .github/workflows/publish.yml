@@ -23,19 +23,19 @@ jobs:
         uses: kzrnm/get-net-sdk-project-versions-action@v1.3.0
         id: get-version
         with:
-          proj-path: src/OneWare.SVNRExtension/OneWare.SVNRExtension.csproj
+          proj-path: src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj
       - name: Build
-        run: dotnet build src/OneWare.SVNRExtension/OneWare.SVNRExtension.csproj -c Release -o publish
+        run: dotnet build src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj -c Release -o publish
       - name: Compress
         uses: thedoctor0/zip-release@0.7.1
         with:
           type: 'zip'
-          filename: ../OneWare.SVNRExtension_${{steps.get-version.outputs.version}}_all.zip
+          filename: ../FEntwumS.SVNRExtension_${{steps.get-version.outputs.version}}_all.zip
           directory: ./publish
       - name: Debug
         run: ls
       - uses: ncipollo/release-action@v1.14.0
         with:
-          artifacts: "OneWare.SVNRExtension_${{steps.get-version.outputs.version}}_all.zip,./publish/compatibility.txt"
+          artifacts: "FEntwumS.SVNRExtension_${{steps.get-version.outputs.version}}_all.zip,./publish/compatibility.txt"
           tag: ${{steps.get-version.outputs.version}}
           allowUpdates: true

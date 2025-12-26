@@ -11,8 +11,8 @@ public class SvnrToolchainService(GhdlToolchainService ghdlToolchain, AsmToVhdlP
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
         var success = await SynthAsync(project, fpga);
-        success &= await FitAsync(project, fpga);
-        success &= await AssembleAsync(project, fpga);
+        success = success && await FitAsync(project, fpga);
+        success = success && await AssembleAsync(project, fpga);
         return success;
     }
 

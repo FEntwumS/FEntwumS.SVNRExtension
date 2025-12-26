@@ -152,6 +152,7 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
             if (!Uri.IsHexDigit(c))
             {
                 invalidChars = true;
+                break;
             }
         }
         

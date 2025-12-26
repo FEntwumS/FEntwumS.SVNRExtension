@@ -3,7 +3,7 @@ using OneWare.GhdlExtension.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using Prism.Ioc;
 
-namespace FentwumS.SVNRExtension.Services;
+namespace FEntwumS.SVNRExtension.Services;
 
 public class SvnrToolchainService(GhdlToolchainService ghdlToolchain, AsmToVhdlPreCompileStep asmPreCompiler)
 {

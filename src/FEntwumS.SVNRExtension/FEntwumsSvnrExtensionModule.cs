@@ -3,7 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
-using FentwumS.SVNRExtension.Services;
+using FEntwumS.SVNRExtension.Services;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -14,14 +14,14 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 using Prism.Ioc;
 using Prism.Modularity;
 
-namespace FentwumS.SVNRExtension;
+namespace FEntwumS.SVNRExtension;
 
 /*TODO:
  * Idee zu Rechtsklickmenu:
  * Projekt-optionsfenster mit auto/manuell, manuell eingestellte Datei kann über Rechtsklickmenu geändert werden
  */
 
-public class FentwumsSvnrExtensionModule : IModule
+public class FEntwumsSvnrExtensionModule : IModule
 {
     public void RegisterTypes(IContainerRegistry containerRegistry)
     {

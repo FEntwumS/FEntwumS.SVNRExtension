@@ -2,7 +2,7 @@
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
-namespace FentwumS.SVNRExtension.Services;
+namespace FEntwumS.SVNRExtension.Services;
 
 public class AsmConverterService(ILogger logger, IOutputService outputService)
 {

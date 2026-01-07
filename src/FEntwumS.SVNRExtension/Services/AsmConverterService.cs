@@ -127,12 +127,11 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
         {
             return (true, 0, "");
         }
-
+        line = line.Trim();
         if (line.Length == 0 || line[0] == '#' || line[0] == ';')
         {
             return (false, -1, "");
         }
-        line = line.Trim();
         //splitString contains the memory address at index 0 and the memory content at index 1. Every other index (if they exist) contain the full or parts of the in-line comment.
         var splitString = line.Split([ ':', ';' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
         var address = Convert.ToInt16(splitString[0], 16);

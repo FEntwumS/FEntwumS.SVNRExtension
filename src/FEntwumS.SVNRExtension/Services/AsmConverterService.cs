@@ -9,7 +9,7 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
     
     public async Task<bool> ConvertAsync(IProjectFile file)
     {
-        outputService.WriteLine("Converting .asm file...");
+        outputService.WriteLine("Converting '" + file.RelativePath + "' to mem_init_package.vhd");
         int i = 0;
         long readLineCounter = 0;
         try

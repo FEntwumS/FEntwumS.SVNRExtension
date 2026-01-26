@@ -1,0 +1,12 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <DrawingImage x:Key="Svnr.Check">
+        <DrawingGroup>
+            <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M32,32L0,32 0,0 32,0z" />
+            <GeometryDrawing Brush="#FF388A34"
+                             Geometry="M16,2.395 C16,2.653 15.9,2.911 15.71,3.097 L8.237,10.57 L6.834,11.97 C6.648,12.16 6.39,12.26 6.132,12.26 C5.874,12.26 5.615,12.16 5.43,11.97 L4.026,10.57 L0.289,6.834 C0.1032,6.648 0,6.39 0,6.132 C0,5.874 0.1032,5.615 0.289,5.43 L1.693,4.026 C1.879,3.84 2.137,3.737 2.395,3.737 C2.653,3.737 2.911,3.84 3.097,4.026 L6.132,7.071 L12.9,0.289 C13.09,0.1032 13.35,0 13.61,0 C13.86,0 14.12,0.1032 14.31,0.289 L15.71,1.693 C15.9,1.879 16,2.137 16,2.395 z" />
+        </DrawingGroup>
+    </DrawingImage>
+    
+</ResourceDictionary>

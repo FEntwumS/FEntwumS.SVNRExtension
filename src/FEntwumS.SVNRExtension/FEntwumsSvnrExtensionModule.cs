@@ -68,14 +68,15 @@ public class FEntwumsSvnrExtensionModule : IModule
             if (x is [IProjectFile { Extension: ".asm" } file])
             {
 
-                l.Add(new MenuItemViewModel("AsmConversion")
+                if (file.Root is not UniversalFpgaProjectRoot { Toolchain: SvnrToolchain } universalFpgaProjectRoot)
                 {
-                    Header = "Convert .asm",
-                    Command = new AsyncRelayCommand(() => asmConverterService.ConvertAsync(file)),
-                });
-
-
-                if (file.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot)
+                    l.Add(new MenuItemViewModel("AsmConversion")
+                    {
+                        Header = "Convert .asm",
+                        Command = new AsyncRelayCommand(() => asmConverterService.ConvertAsync(file)),
+                    });
+                }
+                else
                 {
                     if (SvnrSettingsHelper.GetAsmFile(universalFpgaProjectRoot) != file.RelativePath)
                     {

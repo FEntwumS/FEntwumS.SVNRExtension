@@ -1,5 +1,8 @@
 ﻿using FEntwumS.SVNRExtension.Services;
+using FEntwumS.SVNRExtension.Tools;
+using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
+using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Services;
 
@@ -11,19 +14,17 @@ public class AsmToVhdlPreCompileStep(AsmConverterService converterService, ILogg
 
     public async Task<bool> PerformPreCompileStepAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
+        
         try
         {
-            var asmFiles = project.Files.FindAll(x => x.Extension == ".asm");
-            if (asmFiles.Count == 0)
+            var asmPath = SvnrSettingsHelper.GetAsmFile(project);
+            if (asmPath.Equals("none"))
             {
                 throw new Exception("No .asm file found");
             }
-            if (asmFiles.Count > 1)
-            {
-                throw new Exception("More than one .asm file found");
-            }
-            
-            var success = await converterService.ConvertAsync(asmFiles[0]);
+
+            var asmFile = new ProjectFile(asmPath, project.TopFolder!);
+            var success = await converterService.ConvertAsync(asmFile);
             return success;
             
         }

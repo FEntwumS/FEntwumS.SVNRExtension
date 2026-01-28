@@ -1,9 +1,13 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
+using FEntwumS.SVNRExtension.Tools;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.Essentials.ViewModels;
@@ -36,23 +40,57 @@ public class FEntwumsSvnrExtensionModule : IModule
         var windowService = containerProvider.Resolve<IWindowService>();
         var fpgaService = containerProvider.Resolve<FpgaService>();
 
-        containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
-        {
-            if (x is [IProjectFile { Extension: ".asm"} file])
-            {
-                l.Add(new MenuItemViewModel("GHDL")
-                {
-                    Header = "Convert .asm",
-                    Command = new AsyncRelayCommand(()=>asmConverterService.ConvertAsync(file)),
-                });
-            }
-        });
-        
         containerProvider.Resolve<FpgaService>().RegisterPreCompileStep<AsmToVhdlPreCompileStep>();
         containerProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
+        var resourceInclude = new ResourceInclude(new Uri("avares://FEntwumS.SVNRExtension/Styles/Icons.axaml")) 
+            {Source = new Uri("avares://FEntwumS.SVNRExtension/Styles/Icons.axaml")};
+        Application.Current?.Resources.MergedDictionaries.Add(resourceInclude);
         
         
+        projectExplorerService.Projects.CollectionChanged += (sender, e) =>
+        {
+            if (sender is ObservableCollection<IProjectRoot> collection)
+            {
+                if (e.Action == NotifyCollectionChangedAction.Add)
+                {
+                    foreach (var project in collection)
+                    {
+                        SvnrSettingsHelper.SetAsmOverlay(project);
+                    }
+                }
+            }
+        };
+        
+        
+        containerProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
+        {
+            if (x is [IProjectFile { Extension: ".asm" } file])
+            {
+
+                if (file.Root is not UniversalFpgaProjectRoot { Toolchain: SvnrToolchain } universalFpgaProjectRoot)
+                {
+                    l.Add(new MenuItemViewModel("AsmConversion")
+                    {
+                        Header = "Convert .asm",
+                        Command = new AsyncRelayCommand(() => asmConverterService.ConvertAsync(file)),
+                    });
+                }
+                else
+                {
+                    if (SvnrSettingsHelper.GetAsmFile(universalFpgaProjectRoot) != file.RelativePath)
+                    {
+                        l.Add(new MenuItemViewModel("RegisterAsm")
+                        {
+                            Header = "Use this file to Compile",
+                            Command = new AsyncRelayCommand(() => SvnrSettingsHelper.UpdateProjectAsmFile(file)),
+                        });
+                    }
+                }
+            }
+        });
+        
+
         
         containerProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
             new UiExtension(

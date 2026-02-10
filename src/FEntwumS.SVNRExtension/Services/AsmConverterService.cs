@@ -29,13 +29,14 @@ public class AsmConverterService(IOutputService outputService)
                 "library ieee;\nuse ieee.std_logic_1164.all;\n\npackage svnr_memory_image is\n    constant address_size : integer := 10;  -- ram_adddress breite\n    type mem_type is array (0 to (2**address_size)-1) of std_logic_vector(15 downto 0);\n\n    constant mem_init_image : mem_type := (\n";
             var tail = "    );\n\nend svnr_memory_image;";
             var ramValues = new string[1024];
+            var comments = new string[1024];
             
             using (var asmReader = new StreamReader(file.FullPath))
             {
                 
                 for (i = 0; i < 1024; i++)
                 {
-                    (bool eof, int address, string command) asmCommand;
+                    (bool eof, int address, string command, string comment) asmCommand;
                     do
                     {
                         readLineCounter++;
@@ -65,6 +66,7 @@ public class AsmConverterService(IOutputService outputService)
                     }
 
                     ramValues[i] = asmCommand.command;
+                    comments[i] = asmCommand.comment;
                 }
             }
 
@@ -73,9 +75,9 @@ public class AsmConverterService(IOutputService outputService)
                 await vhdlWriter.WriteLineAsync(header);
                 for (i = 0; i < ramValues.Length-1; i++)
                 {
-                    await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues[i]}\",");
+                    await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues[i]}\", -- {comments[i]}");
                 }
-                await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues.Last()}\"");
+                await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues.Last()}\" -- {comments.Last()}");
                 await vhdlWriter.WriteLineAsync(tail);
             }
             
@@ -90,7 +92,7 @@ public class AsmConverterService(IOutputService outputService)
         return true;
     }
 
-    private async Task<(bool eof, int address, string command)> ExtractCommandAsync(StreamReader reader)
+    private async Task<(bool eof, int address, string command, string comment)> ExtractCommandAsync(StreamReader reader)
     {
         var commandTable = new Dictionary<string, string>()
         {
@@ -127,12 +129,12 @@ public class AsmConverterService(IOutputService outputService)
         line = await reader.ReadLineAsync();
         if (line == null)
         {
-            return (true, 0, "");
+            return (true, 0, "", "");
         }
         line = line.Trim();
         if (line.Length == 0 || line[0] == '#' || line[0] == ';')
         {
-            return (false, -1, "");
+            return (false, -1, "", "");
         }
         //splitString contains the memory address at index 0 and the memory content at index 1. Every other index (if they exist) contain the full or parts of the in-line comment.
         var splitString = line.Split([ ':', ';' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -162,6 +164,6 @@ public class AsmConverterService(IOutputService outputService)
             throw new Exception("Invalid command: '" + splitString[0] + ": " + splitString[1] + "'");
         }
         
-        return (false, address, command.ToLower());
+        return (false, address, command.ToLower(), "");
     }
 }

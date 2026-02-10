@@ -2,10 +2,12 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using Prism.Ioc;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace FEntwumS.SVNRExtension.Services;
 
-public class AsmConverterService(ILogger logger, IOutputService outputService)
+public class AsmConverterService(IOutputService outputService)
 {
     
     public async Task<bool> ConvertAsync(IProjectFile file)
@@ -81,7 +83,7 @@ public class AsmConverterService(ILogger logger, IOutputService outputService)
         }
         catch (Exception e)
         {
-            logger.Error("Conversion from Assembler to VHDL failed at line " + readLineCounter + " : " + e.Message);
+            ContainerLocator.Container.Resolve<ILogger>().LogError("Conversion from Assembler to VHDL failed at line " + readLineCounter + " : " + e.Message);
             return false;
         }
         

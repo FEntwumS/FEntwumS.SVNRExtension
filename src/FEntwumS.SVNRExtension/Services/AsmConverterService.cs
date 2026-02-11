@@ -2,7 +2,6 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using Prism.Ioc;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace FEntwumS.SVNRExtension.Services;

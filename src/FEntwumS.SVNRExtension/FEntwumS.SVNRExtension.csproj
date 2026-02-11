@@ -17,9 +17,9 @@
 
     <ItemGroup>
         <PackageReference Include="OneWare.GhdlExtension" Version="0.99.5" Private="true" ExcludeAssets="runtime;Native" />
-        <PackageReference Include="OneWare.Essentials" Version="0.99.7" Private="false" ExcludeAssets="runtime;Native" />
-        <PackageReference Include="OneWare.OssCadSuiteIntegration" Version="0.99.7" Private="false" ExcludeAssets="runtime;Native" />
-        <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="0.99.7" Private="false" ExcludeAssets="runtime;Native" />
+        <PackageReference Include="OneWare.Essentials" Version="0.99.9" Private="false" ExcludeAssets="runtime;Native" />
+        <PackageReference Include="OneWare.OssCadSuiteIntegration" Version="0.99.9" Private="false" ExcludeAssets="runtime;Native" />
+        <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="0.99.9" Private="false" ExcludeAssets="runtime;Native" />
     </ItemGroup>
 
     <Target Name="GenerateCompatibilityFile" AfterTargets="Build">

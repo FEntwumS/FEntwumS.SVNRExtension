@@ -29,7 +29,7 @@ public class SvnrSettingsHelper
     
     public static string GetAsmFile(UniversalFpgaProjectRoot project)
     {
-        return project.Properties.GetString("ossCad/constraintFile") ?? "none";
+        return project.Properties.GetString("SVNR/AsmFile") ?? "none";
     }
     
     public static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? asmFile)
@@ -51,6 +51,6 @@ public class SvnrSettingsHelper
         if (!hasAsmInclude)
             project.Properties.AddToStringArray("include", "*.asm");
 
-        project.Properties.SetString("ossCad/constraintFile", asmFile);
+        project.Properties.SetString("SVNR/AsmFile", asmFile);
     }
 }

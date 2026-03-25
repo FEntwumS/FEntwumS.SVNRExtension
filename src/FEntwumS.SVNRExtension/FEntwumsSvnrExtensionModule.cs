@@ -20,13 +20,11 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace FEntwumS.SVNRExtension;
 
-/*TODO:
- * Idee zu Rechtsklickmenu:
- * Projekt-optionsfenster mit auto/manuell, manuell eingestellte Datei kann über Rechtsklickmenu geändert werden
- */
-
 public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 {
+    public override IReadOnlyCollection<string> Dependencies
+        => ["OssCadSuiteIntegrationModule"];
+    
     public override void RegisterServices(IServiceCollection services)
     {
         services.AddSingleton<AsmConverterService>();
@@ -42,11 +40,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 
         serviceProvider.Resolve<FpgaService>().RegisterPreCompileStep<AsmToVhdlPreCompileStep>();
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
-
-        var resourceInclude = new ResourceInclude(new Uri("avares://FEntwumS.SVNRExtension/Styles/Icons.axaml")) 
-            {Source = new Uri("avares://FEntwumS.SVNRExtension/Styles/Icons.axaml")};
-        Application.Current?.Resources.MergedDictionaries.Add(resourceInclude);
-        
         
         
         serviceProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
@@ -156,6 +149,19 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                         }
                     };
                 }));
+        fpgaService.RegisterProjectEntryModification(x =>
+        {
+            if (x.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot) return;
+            if (!(x is IProjectFile file && file.Extension == ".asm")) return;
+            if (SvnrSettingsHelper.GetAsmFile(universalFpgaProjectRoot) == file.RelativePath)
+            {
+                x.Icon?.AddOverlay("ConstraintFile", "ForkAwesome.Check");
+            }
+            else
+            {
+                x.Icon?.RemoveOverlay("ConstraintFile");
+            }
+        });
 
     }
 }

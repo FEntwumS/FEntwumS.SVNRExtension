@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Threading.Tasks.Dataflow;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -123,29 +124,41 @@ public class AsmConverterService(IOutputService outputService)
             ["IN"] = "61",
             ["OUT"] = "71",
         };
-        
+
         string? line;
-    
+
         line = await reader.ReadLineAsync();
         if (line == null)
         {
             return (true, 0, "", "");
         }
+
         line = line.Trim();
         if (line.Length == 0 || line[0] == '#' || line[0] == ';')
         {
             return (false, -1, "", "");
         }
+
         //splitString contains the memory address at index 0 and the memory content at index 1. Every other index (if they exist) contain the full or parts of the in-line comment.
-        var splitString = line.Split([ ':', ';' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var splitString =
+            line.Split([':', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var commentParts = new string[splitString.Length - 2];
+        if (splitString.Length >= 2)
+        {
+            commentParts = splitString.Take(2..(splitString.Length)).ToArray();
+            //comment = string.Join(" ", commentParts);
+        }
+
         var address = Convert.ToInt16(splitString[0], 16);
-        
+
         var opCode = splitString[1].Substring(0, splitString[1].Length - 2).ToUpper();
+        var Mnemonic = "NONE";
         if (commandTable.ContainsKey(opCode))
         {
+            Mnemonic = opCode;
             opCode = commandTable[opCode];
         }
-        
+
         var operand = splitString[1].Substring(splitString[1].Length - 2);
         var command = opCode + operand;
         var invalidChars = false;
@@ -158,12 +171,17 @@ public class AsmConverterService(IOutputService outputService)
                 break;
             }
         }
-        
+
         if (command.Length != 4 || invalidChars)
         {
             throw new Exception("Invalid command: '" + splitString[0] + ": " + splitString[1] + "'");
         }
+
+        string[] commentBuilder = {"Address " + splitString[0], "Value " + splitString[1], "Mnemonic : "+ Mnemonic, string.Join(" ", commentParts)};
+
+        var comment = string.Join(", ", commentBuilder);
         
-        return (false, address, command.ToLower(), "");
+        
+        return (false, address, command.ToLower(), comment);
     }
 }

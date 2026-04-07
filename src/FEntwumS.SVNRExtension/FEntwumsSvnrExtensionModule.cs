@@ -29,6 +29,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     {
         services.AddSingleton<AsmConverterService>();
         services.AddSingleton<SvnrToolchainService>();
+        services.AddSingleton<AsmToVhdlPreCompileStep>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)

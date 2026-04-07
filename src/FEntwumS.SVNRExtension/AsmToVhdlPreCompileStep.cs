@@ -1,5 +1,6 @@
 ﻿using FEntwumS.SVNRExtension.Services;
 using FEntwumS.SVNRExtension.Tools;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.ProjectSystem.Models;

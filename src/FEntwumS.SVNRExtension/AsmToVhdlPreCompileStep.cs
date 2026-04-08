@@ -18,6 +18,10 @@ public class AsmToVhdlPreCompileStep(AsmConverterService converterService, ILogg
         
         try
         {
+            if (!SvnrSettingsHelper.IsSvnrToolchainActive(project))
+            {
+                return true;
+            }
             var asmPath = SvnrSettingsHelper.GetAsmFile(project);
             if (asmPath.Equals("none"))
             {

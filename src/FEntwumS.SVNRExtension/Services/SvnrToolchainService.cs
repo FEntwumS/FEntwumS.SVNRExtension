@@ -1,11 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.GhdlExtension.Services;
+using OneWare.OssCadSuiteIntegration.Yosys;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace FEntwumS.SVNRExtension.Services;
 
-public class SvnrToolchainService(GhdlToolchainService ghdlToolchain, AsmToVhdlPreCompileStep asmPreCompiler)
+public class SvnrToolchainService(YosysService yosysService, AsmToVhdlPreCompileStep asmPreCompiler)
 {
     
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
@@ -23,7 +24,7 @@ public class SvnrToolchainService(GhdlToolchainService ghdlToolchain, AsmToVhdlP
 
         try
         {
-            success = await ghdlToolchain.CompileAsync(project, fpga);
+            success = await yosysService.CompileAsync(project, fpga);
             return success;
         }
         catch (Exception e)
@@ -35,12 +36,12 @@ public class SvnrToolchainService(GhdlToolchainService ghdlToolchain, AsmToVhdlP
 
     public async Task<bool> FitAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
-        return await ghdlToolchain.FitAsync(project, fpga);
+        return await yosysService.FitAsync(project, fpga);
     }
 
     public async Task<bool> AssembleAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
-        return await ghdlToolchain.AssembleAsync(project, fpga);
+        return await yosysService.AssembleAsync(project, fpga);
     }
 
 

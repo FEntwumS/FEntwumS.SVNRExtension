@@ -19,12 +19,9 @@ public class SvnrToolchainService(YosysService yosysService, AsmToVhdlPreCompile
 
     public async Task<bool> SynthAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
     {
-        bool success = await asmPreCompiler.PerformPreCompileStepAsync(project, fpga);
-        if (!success) return false;
-
         try
         {
-            success = await yosysService.CompileAsync(project, fpga);
+            bool success = await yosysService.CompileAsync(project, fpga);
             return success;
         }
         catch (Exception e)

@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace FEntwumS.SVNRExtension.Services;
 
@@ -29,13 +28,14 @@ public class AsmConverterService(IOutputService outputService)
                 "library ieee;\nuse ieee.std_logic_1164.all;\n\npackage svnr_memory_image is\n    constant address_size : integer := 10;  -- ram_adddress breite\n    type mem_type is array (0 to (2**address_size)-1) of std_logic_vector(15 downto 0);\n\n    constant mem_init_image : mem_type := (\n";
             var tail = "    );\n\nend svnr_memory_image;";
             var ramValues = new string[1024];
+            var comments = new string[1024];
             
             using (var asmReader = new StreamReader(file.FullPath))
             {
                 
                 for (i = 0; i < 1024; i++)
                 {
-                    (bool eof, int address, string command) asmCommand;
+                    (bool eof, int address, string command, string comment) asmCommand;
                     do
                     {
                         readLineCounter++;
@@ -65,6 +65,7 @@ public class AsmConverterService(IOutputService outputService)
                     }
 
                     ramValues[i] = asmCommand.command;
+                    comments[i] = asmCommand.comment;
                 }
             }
 
@@ -73,16 +74,16 @@ public class AsmConverterService(IOutputService outputService)
                 await vhdlWriter.WriteLineAsync(header);
                 for (i = 0; i < ramValues.Length-1; i++)
                 {
-                    await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues[i]}\",");
+                    await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues[i]}\", -- {comments[i]}");
                 }
-                await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues.Last()}\"");
+                await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues.Last()}\" -- {comments.Last()}");
                 await vhdlWriter.WriteLineAsync(tail);
             }
             
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError("Conversion from Assembler to VHDL failed at line " + readLineCounter + " : " + e.Message);
+            outputService.WriteLine("Conversion from Assembler to VHDL failed at line " + readLineCounter + " : " + e.Message, Brushes.Red);
             return false;
         }
         
@@ -90,7 +91,7 @@ public class AsmConverterService(IOutputService outputService)
         return true;
     }
 
-    private async Task<(bool eof, int address, string command)> ExtractCommandAsync(StreamReader reader)
+    private async Task<(bool eof, int address, string command, string comment)> ExtractCommandAsync(StreamReader reader)
     {
         var commandTable = new Dictionary<string, string>()
         {
@@ -121,29 +122,41 @@ public class AsmConverterService(IOutputService outputService)
             ["IN"] = "61",
             ["OUT"] = "71",
         };
-        
+
         string? line;
-    
+
         line = await reader.ReadLineAsync();
         if (line == null)
         {
-            return (true, 0, "");
+            return (true, 0, "", "");
         }
+
         line = line.Trim();
         if (line.Length == 0 || line[0] == '#' || line[0] == ';')
         {
-            return (false, -1, "");
+            return (false, -1, "", "");
         }
+
         //splitString contains the memory address at index 0 and the memory content at index 1. Every other index (if they exist) contain the full or parts of the in-line comment.
-        var splitString = line.Split([ ':', ';' ], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var splitString =
+            line.Split([':', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        var commentParts = new string[splitString.Length - 2];
+        if (splitString.Length >= 2)
+        {
+            commentParts = splitString.Take(2..(splitString.Length)).ToArray();
+            //comment = string.Join(" ", commentParts);
+        }
+
         var address = Convert.ToInt16(splitString[0], 16);
-        
+
         var opCode = splitString[1].Substring(0, splitString[1].Length - 2).ToUpper();
+        var Mnemonic = "NONE";
         if (commandTable.ContainsKey(opCode))
         {
+            Mnemonic = opCode;
             opCode = commandTable[opCode];
         }
-        
+
         var operand = splitString[1].Substring(splitString[1].Length - 2);
         var command = opCode + operand;
         var invalidChars = false;
@@ -156,12 +169,17 @@ public class AsmConverterService(IOutputService outputService)
                 break;
             }
         }
-        
+
         if (command.Length != 4 || invalidChars)
         {
             throw new Exception("Invalid command: '" + splitString[0] + ": " + splitString[1] + "'");
         }
+
+        string[] commentBuilder = {"Address " + splitString[0], "Value " + splitString[1], "Mnemonic : "+ Mnemonic, string.Join(" ", commentParts)};
+
+        var comment = string.Join(", ", commentBuilder);
         
-        return (false, address, command.ToLower());
+        
+        return (false, address, command.ToLower(), comment);
     }
 }

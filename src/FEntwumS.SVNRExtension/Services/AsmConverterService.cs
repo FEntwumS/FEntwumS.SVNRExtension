@@ -1,9 +1,7 @@
-﻿using System.Threading.Tasks.Dataflow;
-using Microsoft.Extensions.Logging;
+﻿using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace FEntwumS.SVNRExtension.Services;
 
@@ -85,7 +83,7 @@ public class AsmConverterService(IOutputService outputService)
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().LogError("Conversion from Assembler to VHDL failed at line " + readLineCounter + " : " + e.Message);
+            outputService.WriteLine("Conversion from Assembler to VHDL failed at line " + readLineCounter + " : " + e.Message, Brushes.Red);
             return false;
         }
         

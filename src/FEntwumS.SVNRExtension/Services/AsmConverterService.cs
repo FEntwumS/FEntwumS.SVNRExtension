@@ -2,10 +2,17 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
-using System;
 using System.Text.RegularExpressions;
 
 namespace FEntwumS.SVNRExtension.Services;
+
+enum Status
+{
+    Normal,
+    Comment,
+    SkipLines,
+    EndOfFile
+}
 
 public class AsmConverterService(IOutputService outputService)
 {
@@ -34,17 +41,18 @@ public class AsmConverterService(IOutputService outputService)
             
             using (var asmReader = new StreamReader(file.FullPath))
             {
-                
+                bool warningActive = true;
                 for (i = 0; i < 1024; i++)
                 {
-                    (bool eof, int address, string command, string comment) asmCommand;
+                    (Status status, int address, string command, string comment) asmCommand;
                     do
                     {
                         readLineCounter++;
                         asmCommand = await ExtractCommandAsync(asmReader);
-                    } while (asmCommand.address == -1);
+                        if (asmCommand.status == Status.SkipLines) warningActive = false;
+                    } while (asmCommand.status == Status.Comment | asmCommand.status == Status.SkipLines);
                     
-                    if (asmCommand.eof)
+                    if (asmCommand.status == Status.EndOfFile)
                     {
                         while (i < 1024)
                         {
@@ -62,9 +70,18 @@ public class AsmConverterService(IOutputService outputService)
 
                     while (i < asmCommand.address)
                     {
+                        if (warningActive) outputService.WriteLine
+                        (
+                            "Warning: Skipping address " + i.ToString("X4") + 
+                            " -- You can suppress this message with '@FreeLines' before the intended break",
+                            Brushes.Yellow
+                        );
+                        
                         ramValues[i] = "0000";
                         i++;
                     }
+
+                    warningActive = true;
 
                     ramValues[i] = asmCommand.command;
                     comments[i] = asmCommand.comment;
@@ -93,7 +110,7 @@ public class AsmConverterService(IOutputService outputService)
         return true;
     }
 
-    private async Task<(bool eof, int address, string command, string comment)> ExtractCommandAsync(StreamReader reader)
+    private async Task<(Status status, int address, string command, string comment)> ExtractCommandAsync(StreamReader reader)
     {
         var commandTable = new Dictionary<string, string>()
         {
@@ -128,17 +145,23 @@ public class AsmConverterService(IOutputService outputService)
         string? line;
 
         line = await reader.ReadLineAsync();
+        
         if (line == null)
         {
-            return (true, 0, "", "");
+            return (Status.EndOfFile, 0, "", "");
         }
 
         line = line.Trim();
         if (line.Length == 0 || line[0] == '#' || line[0] == ';')
         {
-            return (false, -1, "", "");
+            return (Status.Comment, 0, "", "");
         }
-
+        
+        if (line == "@FreeLines")
+        {
+            return (Status.SkipLines, 0, "", "");
+        }
+        
         const string pattern = @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?<value>[0-9A-Za-z]{4,6})\s*(?:;\s*(?<comment>.*))?";
         var match = Regex.Match(line, pattern);
 
@@ -190,6 +213,6 @@ public class AsmConverterService(IOutputService outputService)
         var comment = string.Join(", ", commentBuilder);
         
         
-        return (false, addressValue, command.ToLower(), comment);
+        return (Status.Normal, addressValue, command.ToLower(), comment);
     }
 }

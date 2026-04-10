@@ -2,6 +2,8 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using System;
+using System.Text.RegularExpressions;
 
 namespace FEntwumS.SVNRExtension.Services;
 
@@ -137,19 +139,27 @@ public class AsmConverterService(IOutputService outputService)
             return (false, -1, "", "");
         }
 
-        //splitString contains the memory address at index 0 and the memory content at index 1. Every other index (if they exist) contain the full or parts of the in-line comment.
-        var splitString =
-            line.Split([':', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        var commentParts = new string[splitString.Length - 2];
-        if (splitString.Length >= 2)
+        const string pattern = @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?<value>[0-9A-Za-z]{4,6})\s*(?:;\s*(?<comment>.*))?";
+        var match = Regex.Match(line, pattern);
+
+        string address;
+        int addressValue;
+        string value;
+        string commentOriginal;
+        
+        if (match.Success)
         {
-            commentParts = splitString.Take(2..(splitString.Length)).ToArray();
-            //comment = string.Join(" ", commentParts);
+            address = match.Groups["address"].Value;
+            addressValue = Convert.ToInt16(address, 16);
+            value = match.Groups["value"].Value;
+            commentOriginal = match.Groups["comment"].Success ? match.Groups["comment"].Value : "";
         }
-
-        var address = Convert.ToInt16(splitString[0], 16);
-
-        var opCode = splitString[1].Substring(0, splitString[1].Length - 2).ToUpper();
+        else
+        {
+            throw new Exception("Illegal line: " + line);
+        }
+        
+        var opCode = value.Substring(0, value.Length - 2).ToUpper();
         var Mnemonic = "NONE";
         if (commandTable.ContainsKey(opCode))
         {
@@ -157,7 +167,7 @@ public class AsmConverterService(IOutputService outputService)
             opCode = commandTable[opCode];
         }
 
-        var operand = splitString[1].Substring(splitString[1].Length - 2);
+        var operand = value.Substring(value.Length - 2);
         var command = opCode + operand;
         var invalidChars = false;
 
@@ -172,14 +182,14 @@ public class AsmConverterService(IOutputService outputService)
 
         if (command.Length != 4 || invalidChars)
         {
-            throw new Exception("Invalid command: '" + splitString[0] + ": " + splitString[1] + "'");
+            throw new Exception("Invalid command: '" + address + ": " + address + "'");
         }
 
-        string[] commentBuilder = {"Address " + splitString[0], "Value " + splitString[1], "Mnemonic : "+ Mnemonic, string.Join(" ", commentParts)};
+        string[] commentBuilder = {"Address " + address, "Value " + value, "Mnemonic : "+ Mnemonic, commentOriginal};
 
         var comment = string.Join(", ", commentBuilder);
         
         
-        return (false, address, command.ToLower(), comment);
+        return (false, addressValue, command.ToLower(), comment);
     }
 }

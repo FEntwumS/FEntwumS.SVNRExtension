@@ -68,17 +68,22 @@ public class AsmConverterService(IOutputService outputService)
                         throw new Exception("Illegal address order: " + asmCommand.address.ToString("X") + " came after " + (i-1).ToString("X"));
                     }
 
-                    while (i < asmCommand.address)
+                    if (i < asmCommand.address)
                     {
-                        if (warningActive) outputService.WriteLine
-                        (
-                            "Warning: Skipping address " + i.ToString("X4") + 
-                            " -- You can suppress this message with '@FreeLines' before the intended break",
-                            Brushes.Yellow
-                        );
-                        
-                        ramValues[i] = "0000";
-                        i++;
+                        var start = i;
+                        while (i < asmCommand.address)
+                        {
+                            ramValues[i] = "0000";
+                            i++;
+                        }
+                        if (warningActive)
+                            outputService.WriteLine
+                            (
+                                "Warning: Skipping addresses " + 
+                                start.ToString("X4") + " to " + (i-1).ToString("X4") +
+                                " -- You can suppress this message with '@FreeLines' before the intended break",
+                                Brushes.Yellow
+                            );
                     }
 
                     warningActive = true;

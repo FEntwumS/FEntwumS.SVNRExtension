@@ -2,8 +2,17 @@
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
+using System.Text.RegularExpressions;
 
 namespace FEntwumS.SVNRExtension.Services;
+
+enum Status
+{
+    Normal,
+    Comment,
+    SkipLines,
+    EndOfFile
+}
 
 public class AsmConverterService(IOutputService outputService)
 {
@@ -32,17 +41,18 @@ public class AsmConverterService(IOutputService outputService)
             
             using (var asmReader = new StreamReader(file.FullPath))
             {
-                
+                bool warningActive = true;
                 for (i = 0; i < 1024; i++)
                 {
-                    (bool eof, int address, string command, string comment) asmCommand;
+                    (Status status, int address, string command, string comment) asmCommand;
                     do
                     {
                         readLineCounter++;
                         asmCommand = await ExtractCommandAsync(asmReader);
-                    } while (asmCommand.address == -1);
+                        if (asmCommand.status == Status.SkipLines) warningActive = false;
+                    } while (asmCommand.status == Status.Comment | asmCommand.status == Status.SkipLines);
                     
-                    if (asmCommand.eof)
+                    if (asmCommand.status == Status.EndOfFile)
                     {
                         while (i < 1024)
                         {
@@ -58,11 +68,25 @@ public class AsmConverterService(IOutputService outputService)
                         throw new Exception("Illegal address order: " + asmCommand.address.ToString("X") + " came after " + (i-1).ToString("X"));
                     }
 
-                    while (i < asmCommand.address)
+                    if (i < asmCommand.address)
                     {
-                        ramValues[i] = "0000";
-                        i++;
+                        var start = i;
+                        while (i < asmCommand.address)
+                        {
+                            ramValues[i] = "0000";
+                            i++;
+                        }
+                        if (warningActive)
+                            outputService.WriteLine
+                            (
+                                "Warning: Skipping addresses " + 
+                                start.ToString("X4") + " to " + (i-1).ToString("X4") +
+                                " -- You can suppress this message with '@FreeLines' before the intended break",
+                                Brushes.Yellow
+                            );
                     }
+
+                    warningActive = true;
 
                     ramValues[i] = asmCommand.command;
                     comments[i] = asmCommand.comment;
@@ -91,7 +115,7 @@ public class AsmConverterService(IOutputService outputService)
         return true;
     }
 
-    private async Task<(bool eof, int address, string command, string comment)> ExtractCommandAsync(StreamReader reader)
+    private async Task<(Status status, int address, string command, string comment)> ExtractCommandAsync(StreamReader reader)
     {
         var commandTable = new Dictionary<string, string>()
         {
@@ -126,30 +150,44 @@ public class AsmConverterService(IOutputService outputService)
         string? line;
 
         line = await reader.ReadLineAsync();
+        
         if (line == null)
         {
-            return (true, 0, "", "");
+            return (Status.EndOfFile, 0, "", "");
         }
 
         line = line.Trim();
         if (line.Length == 0 || line[0] == '#' || line[0] == ';')
         {
-            return (false, -1, "", "");
+            return (Status.Comment, 0, "", "");
         }
-
-        //splitString contains the memory address at index 0 and the memory content at index 1. Every other index (if they exist) contain the full or parts of the in-line comment.
-        var splitString =
-            line.Split([':', ';'], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        var commentParts = new string[splitString.Length - 2];
-        if (splitString.Length >= 2)
+        
+        if (line == "@FreeLines")
         {
-            commentParts = splitString.Take(2..(splitString.Length)).ToArray();
-            //comment = string.Join(" ", commentParts);
+            return (Status.SkipLines, 0, "", "");
         }
+        
+        const string pattern = @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?<value>[0-9A-Za-z]{4,6})\s*(?:;\s*(?<comment>.*))?";
+        var match = Regex.Match(line, pattern);
 
-        var address = Convert.ToInt16(splitString[0], 16);
-
-        var opCode = splitString[1].Substring(0, splitString[1].Length - 2).ToUpper();
+        string address;
+        int addressValue;
+        string value;
+        string commentOriginal;
+        
+        if (match.Success)
+        {
+            address = match.Groups["address"].Value;
+            addressValue = Convert.ToInt16(address, 16);
+            value = match.Groups["value"].Value;
+            commentOriginal = match.Groups["comment"].Success ? match.Groups["comment"].Value : "";
+        }
+        else
+        {
+            throw new Exception("Illegal line: " + line);
+        }
+        
+        var opCode = value.Substring(0, value.Length - 2).ToUpper();
         var Mnemonic = "NONE";
         if (commandTable.ContainsKey(opCode))
         {
@@ -157,7 +195,7 @@ public class AsmConverterService(IOutputService outputService)
             opCode = commandTable[opCode];
         }
 
-        var operand = splitString[1].Substring(splitString[1].Length - 2);
+        var operand = value.Substring(value.Length - 2);
         var command = opCode + operand;
         var invalidChars = false;
 
@@ -172,14 +210,14 @@ public class AsmConverterService(IOutputService outputService)
 
         if (command.Length != 4 || invalidChars)
         {
-            throw new Exception("Invalid command: '" + splitString[0] + ": " + splitString[1] + "'");
+            throw new Exception("Invalid command: '" + address + ": " + address + "'");
         }
 
-        string[] commentBuilder = {"Address " + splitString[0], "Value " + splitString[1], "Mnemonic : "+ Mnemonic, string.Join(" ", commentParts)};
+        string[] commentBuilder = {"Address " + address, "Value " + value, "Mnemonic : "+ Mnemonic, commentOriginal};
 
         var comment = string.Join(", ", commentBuilder);
         
         
-        return (false, address, command.ToLower(), comment);
+        return (Status.Normal, addressValue, command.ToLower(), comment);
     }
 }

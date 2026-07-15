@@ -21,6 +21,10 @@
         <PackageReference Include="OneWare.OssCadSuiteIntegration" Version="1.0.22" Private="false" ExcludeAssets="runtime;Native" />
         <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="1.0.22" Private="false" ExcludeAssets="runtime;Native" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\asm.tmLanguage.json"/>
+    </ItemGroup>
 
     <Target Name="GenerateCompatibilityFile" AfterTargets="Build">
         <ItemGroup>

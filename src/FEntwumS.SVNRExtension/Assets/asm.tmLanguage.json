@@ -1,0 +1,81 @@
+{
+  "scopeName": "source.asm",
+  "name": "ASM",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#skipLines"
+    },
+    {
+      "include": "#commands"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.semicolon",
+          "match": "^\\s*[;].*$"
+        },
+        {
+          "name": "comment.line.hash",
+          "match": "^\\s*#.*$"
+        }
+      ]
+    },
+    "skipLines": {
+      "name": "meta.directive.free-lines",
+      "match": "^\\s*@FreeLines\\s*$"
+    },
+    "commands": {
+      "patterns": [
+        {
+          "name": "meta.command.pattern1",
+          "match": "^([0-9A-Fa-f]{1,4}):\\s*([a-zA-Z]{3,4})\\s*([0-9A-Fa-f]{2})\\s*(#.*)?$",
+          "captures": {
+            "1": { "name": "constant.numeric.hex.address" },
+            "2": {
+              "name": "keyword.control.opcode",
+              "patterns": [
+                {
+                  "include": "#validOpcodes"
+                }
+              ]
+            },
+            "3": { "name": "constant.numeric.hex.data" },
+            "4": { "name": "comment.line" }
+          }
+        },
+        {
+          "name": "meta.command.pattern2",
+          "match": "^([0-9A-Fa-f]{1,4}):\\s*([0-9A-Fa-f]{4})\\s*(#.*)?$",
+          "captures": {
+            "1": { "name": "constant.numeric.hex.address" },
+            "2": { "name": "constant.numeric.hex.data" },
+            "3": { "name": "comment.line" }
+          }
+        }
+      ]
+    },
+    "validOpcodes": {
+      "patterns": [
+        {
+          "name": "keyword.control.opcode",
+          "match": "^NOOP$|^LDM$|^LDI$|^LDA$|^STI$|^STM$|^ADD$|^SUB$|^AND$|^OR$|^NOT$|^XOR$|^INC$|^DEC$|^LEFT$|^RIGT$|^JM$|^JA$|^JZM$|^JNM$|^JLM$|^JZA$|^JNA$|^JLA$|^IN$|^OUT$",
+          "captures": {
+            "0": { "name": "keyword.control.opcode" }
+          }
+        },
+        {
+          "name": "invalid.illegal",
+          "match": "^([a-zA-Z]{3,4})$",
+          "captures": {
+            "1": { "name": "invalid.illegal" }
+          }
+        }
+      ]
+    }
+  }
+}

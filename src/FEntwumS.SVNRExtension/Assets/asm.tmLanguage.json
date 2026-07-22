@@ -1,12 +1,15 @@
 {
   "scopeName": "source.asm",
   "name": "ASM",
+  "fileTypes": [
+    "asm"
+  ],
   "patterns": [
     {
       "include": "#comments"
     },
     {
-      "include": "#skipLines"
+      "include": "#directives"
     },
     {
       "include": "#commands"
@@ -16,63 +19,46 @@
     "comments": {
       "patterns": [
         {
-          "name": "comment.line.semicolon",
+          "name": "comment.line.semicolon.asm",
           "match": "^\\s*[;].*$"
         },
         {
-          "name": "comment.line.hash",
+          "name": "comment.line.hash.asm",
           "match": "^\\s*#.*$"
         }
       ]
     },
-    "skipLines": {
-      "name": "meta.directive.free-lines",
-      "match": "^\\s*@FreeLines\\s*$"
+    "directives": {
+      "patterns": [
+        {
+          "name": "keyword.other.directive.free-lines.asm",
+          "match": "^\\s*@FreeLines\\s*$"
+        }
+      ]
     },
     "commands": {
       "patterns": [
         {
-          "name": "meta.command.pattern1",
-          "match": "^([0-9A-Fa-f]{1,4}):\\s*([a-zA-Z]{3,4})\\s*([0-9A-Fa-f]{2})\\s*(#.*)?$",
+          "name": "meta.command.pattern1.asm",
+          "match": "^(([0-9A-Fa-f]{1,4})|(.{1,4})):\\s*([0-9A-Fa-f]{4})\\s*(#|;.*)?$",
           "captures": {
-            "1": { "name": "constant.numeric.hex.address" },
-            "2": {
-              "name": "keyword.control.opcode",
-              "patterns": [
-                {
-                  "include": "#validOpcodes"
-                }
-              ]
-            },
-            "3": { "name": "constant.numeric.hex.data" },
-            "4": { "name": "comment.line" }
+            "2": { "name": "constant.numeric.hex.address.asm" },
+            "3": { "name": "invalid.illegal.asm" },
+            "4": { "name": "constant.numeric.hex.data.asm" },
+            "5": { "name": "comment.line.hash.asm" }
           }
         },
         {
-          "name": "meta.command.pattern2",
-          "match": "^([0-9A-Fa-f]{1,4}):\\s*([0-9A-Fa-f]{4})\\s*(#.*)?$",
+          "name": "meta.command.pattern2.asm",
+          "match": "^(([0-9A-Fa-f]{1,4})|(.{1,4})):\\s*((NOOP|LDM|LDI|LDA|STI|STM|ADD|SUB|AND|OR|NOT|XOR|INC|DEC|LEFT|RIGT|JM|JA|JZM|JNM|JLM|JZA|JNA|JLA|IN|OUT)|(.{2,4}))\\s*(([0-9A-Fa-f]{2})|(.{1,3}))\\s*(#|;.*)?$",
           "captures": {
-            "1": { "name": "constant.numeric.hex.address" },
-            "2": { "name": "constant.numeric.hex.data" },
-            "3": { "name": "comment.line" }
-          }
-        }
-      ]
-    },
-    "validOpcodes": {
-      "patterns": [
-        {
-          "name": "keyword.control.opcode",
-          "match": "^NOOP$|^LDM$|^LDI$|^LDA$|^STI$|^STM$|^ADD$|^SUB$|^AND$|^OR$|^NOT$|^XOR$|^INC$|^DEC$|^LEFT$|^RIGT$|^JM$|^JA$|^JZM$|^JNM$|^JLM$|^JZA$|^JNA$|^JLA$|^IN$|^OUT$",
-          "captures": {
-            "0": { "name": "keyword.control.opcode" }
-          }
-        },
-        {
-          "name": "invalid.illegal",
-          "match": "^([a-zA-Z]{3,4})$",
-          "captures": {
-            "1": { "name": "invalid.illegal" }
+            "2": { "name": "constant.numeric.hex.address.asm" },
+            "3": { "name": "invalid.illegal.asm" },
+            "5": { "name": "keyword.control.opcode.asm" },
+            "6": { "name": "invalid.illegal.asm" },
+            "8": { "name": "constant.numeric.hex.data.asm" },
+            "9": { "name": "invalid.illegal.asm" },
+            "10": { "name": "comment.line.hash.asm" }
           }
         }
       ]

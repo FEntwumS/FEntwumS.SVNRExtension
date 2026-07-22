@@ -39,8 +39,9 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
         
         fpgaService.RegisterLanguage("ASM", SupportedExtensions);
-        //TODO: grammarPath anpassen
-        serviceProvider.Resolve<ILanguageManager>().RegisterTextMateLanguage("asm", "avares://FEntwumS.SVNRExtention/Assets/asm.tmLanguage.json", SupportedExtensions);
+        var languageManager = serviceProvider.Resolve<ILanguageManager>();
+
+        languageManager.RegisterTextMateLanguage("asm", "avares:// FEntwumS.SVNRExtension/Assets/asm.tmLanguage.json", SupportedExtensions);
         
         projectExplorerService.RegisterConstructContextMenu((x,l) =>
         {

@@ -29,6 +29,7 @@ public class AsmToVhdlPreCompileStep(AsmConverterService converterService, ILogg
             }
 
             var asmFile = new ProjectFile(asmPath, project.TopFolder!);
+            logger.Log(LogLevel.Debug, "Converting .asm file");
             var success = await converterService.ConvertAsync(asmFile);
             return success;
             

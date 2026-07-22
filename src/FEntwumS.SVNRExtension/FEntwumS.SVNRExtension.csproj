@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**\*.*"/>
+        <AvaloniaResource Include="Assets\asm.tmLanguage.json"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -167,57 +167,57 @@ public class AsmConverterService(IOutputService outputService)
             return (Status.SkipLines, 0, "", "");
         }
         
-        const string pattern = @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?<value>[0-9A-Za-z]{4,6})\s*(?:;\s*(?<comment>.*))?";
+        const string pattern = @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?:(?<opcode>[A-Za-z]{2,4})\s*(?<operand>[0-9A-Fa-f]{2})|(?<data>[0-9A-Fa-f]{4}))\s*(?:;\s*(?<comment>.*))?";
         var match = Regex.Match(line, pattern);
 
         string address;
         int addressValue;
-        string value;
         string commentOriginal;
+        string value;
+        string mnemonicResolved;
         
         if (match.Success)
         {
             address = match.Groups["address"].Value;
             addressValue = Convert.ToInt16(address, 16);
-            value = match.Groups["value"].Value;
             commentOriginal = match.Groups["comment"].Success ? match.Groups["comment"].Value : "";
+
+            if (match.Groups["data"].Success)
+            {
+                var dataHex = match.Groups["data"].Value.ToUpper();
+                mnemonicResolved = "NONE";
+                value = dataHex;
+            }
+            else
+            {
+                var opCodeText = match.Groups["opcode"].Value.ToUpper();
+                var operand = match.Groups["operand"].Value.ToUpper();
+                mnemonicResolved = "NONE";
+                if (commandTable.ContainsKey(opCodeText))
+                {
+                    mnemonicResolved = opCodeText;
+                    opCodeText = commandTable[opCodeText];
+                }
+                value = opCodeText + operand;
+            }
         }
         else
         {
             throw new Exception("Illegal line: " + line);
         }
-        
-        var opCode = value.Substring(0, value.Length - 2).ToUpper();
-        var Mnemonic = "NONE";
-        if (commandTable.ContainsKey(opCode))
+
+        var invalidChars = value.Any(c => !Uri.IsHexDigit(c));
+
+        if (value.Length != 4 || invalidChars)
         {
-            Mnemonic = opCode;
-            opCode = commandTable[opCode];
+            throw new Exception("Invalid command: '" + address + ": " + value + "'");
         }
 
-        var operand = value.Substring(value.Length - 2);
-        var command = opCode + operand;
-        var invalidChars = false;
-
-        foreach (var c in command)
-        {
-            if (!Uri.IsHexDigit(c))
-            {
-                invalidChars = true;
-                break;
-            }
-        }
-
-        if (command.Length != 4 || invalidChars)
-        {
-            throw new Exception("Invalid command: '" + address + ": " + address + "'");
-        }
-
-        string[] commentBuilder = {"Address " + address, "Value " + value, "Mnemonic : "+ Mnemonic, commentOriginal};
+        string[] commentBuilder = {"Address " + address, "Value " + value, "Mnemonic : " + mnemonicResolved, commentOriginal};
 
         var comment = string.Join(", ", commentBuilder);
         
         
-        return (Status.Normal, addressValue, command.ToLower(), comment);
+        return (Status.Normal, addressValue, value.ToLower(), comment);
     }
 }

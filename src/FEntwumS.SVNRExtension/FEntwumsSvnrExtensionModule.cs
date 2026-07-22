@@ -19,6 +19,7 @@ namespace FEntwumS.SVNRExtension;
 
 public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 {
+    public static readonly string[] SupportedExtensions = [".asm"];
     public override IReadOnlyCollection<string> Dependencies
         => ["OssCadSuiteIntegrationModule"];
     
@@ -37,8 +38,12 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
         
+        fpgaService.RegisterLanguage("ASM", SupportedExtensions);
+        var languageManager = serviceProvider.Resolve<ILanguageManager>();
+
+        languageManager.RegisterTextMateLanguage("asm", "avares:// FEntwumS.SVNRExtension/Assets/asm.tmLanguage.json", SupportedExtensions);
         
-        serviceProvider.Resolve<IProjectExplorerService>().RegisterConstructContextMenu((x,l) =>
+        projectExplorerService.RegisterConstructContextMenu((x,l) =>
         {
             if (x is [IProjectFile { Extension: ".asm" } file])
             {
@@ -67,7 +72,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         
 
         
-        serviceProvider.Resolve<IWindowService>().RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
+        windowService.RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
             new OneWareUiExtension(
                 x =>
                 {

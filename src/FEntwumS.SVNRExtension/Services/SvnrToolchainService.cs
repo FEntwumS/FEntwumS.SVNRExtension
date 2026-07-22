@@ -1,12 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FEntwumS.SVNRExtension.Tools;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
-using OneWare.GhdlExtension.Services;
 using OneWare.OssCadSuiteIntegration.Yosys;
+using OneWare.ProjectSystem.Models;
 using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace FEntwumS.SVNRExtension.Services;
 
-public class SvnrToolchainService(YosysService yosysService, AsmToVhdlPreCompileStep asmPreCompiler)
+public class SvnrToolchainService(YosysService yosysService, AsmConverterService converterService, ILogger logger)
 {
     
     public async Task<bool> CompileAsync(UniversalFpgaProjectRoot project, FpgaModel fpga)
@@ -21,12 +22,33 @@ public class SvnrToolchainService(YosysService yosysService, AsmToVhdlPreCompile
     {
         try
         {
-            bool success = await yosysService.CompileAsync(project, fpga);
+
+            if (!SvnrSettingsHelper.IsSvnrToolchainActive(project))
+            {
+                return true;
+            }
+            var asmPath = SvnrSettingsHelper.GetAsmFile(project);
+            if (asmPath.Equals("none"))
+            {
+                throw new Exception("No .asm file found");
+            }
+
+            var asmFile = new ProjectFile(asmPath, project.TopFolder!);
+            logger.Log(LogLevel.Debug, "Converting .asm file");
+            bool success = await converterService.ConvertAsync(asmFile);
+
+            if (!success)
+            {
+                logger.Log(LogLevel.Error, "Could not convert .asm file");
+                return false;
+            }
+
+            success = await yosysService.CompileAsync(project, fpga);
             return success;
         }
         catch (Exception e)
         {
-            ContainerLocator.Container.Resolve<ILogger>().Error(e.Message, e);
+            logger.Error(e.Message, e);
             return false;
         }
     }

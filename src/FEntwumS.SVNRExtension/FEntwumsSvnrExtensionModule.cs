@@ -1,9 +1,6 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
-using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
@@ -29,7 +26,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     {
         services.AddSingleton<AsmConverterService>();
         services.AddSingleton<SvnrToolchainService>();
-        services.AddSingleton<AsmToVhdlPreCompileStep>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -39,7 +35,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         var windowService = serviceProvider.Resolve<IWindowService>();
         var fpgaService = serviceProvider.Resolve<FpgaService>();
 
-        serviceProvider.Resolve<FpgaService>().RegisterPreCompileStep<AsmToVhdlPreCompileStep>();
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
         
         

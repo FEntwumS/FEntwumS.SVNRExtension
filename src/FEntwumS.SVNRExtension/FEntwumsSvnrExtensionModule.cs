@@ -131,6 +131,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         var fpgaService = serviceProvider.Resolve<FpgaService>();
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         var paths = serviceProvider.Resolve<IPaths>();
+        serviceProvider.Resolve<IPackageService>().RegisterPackage(GdbPackage);
 
         settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,
             new FilePathSetting(

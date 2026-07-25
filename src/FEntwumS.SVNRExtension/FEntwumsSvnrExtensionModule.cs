@@ -21,7 +21,7 @@ namespace FEntwumS.SVNRExtension;
 
 public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 {
-    public const string GdbPathSetting = "GdbPath";
+    public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
     
     public static readonly Package GdbPackage = new()
     {
@@ -102,18 +102,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 
     public static readonly string[] SupportedExtensions = [".asm"];
 
-    public static string SuggestGdbPath(IPaths paths)
-    {
-        var target = GdbPackage.Versions?
-            .SelectMany(v => v.Targets ?? [])
-            .FirstOrDefault(t => t.Target == PlatformHelper.PlatformIdentifier);
-
-        var relativePath = target?.AutoSetting?.FirstOrDefault()?.RelativePath;
-        if (relativePath is null) return string.Empty;
-
-        return Path.Combine(paths.NativeToolsDirectory, GdbPackage.Id!, relativePath);
-    }
-
     public override IReadOnlyCollection<string> Dependencies
         => ["OssCadSuiteIntegrationModule"];
 
@@ -132,18 +120,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         var paths = serviceProvider.Resolve<IPaths>();
         serviceProvider.Resolve<IPackageService>().RegisterPackage(GdbPackage);
-
-        settingsService.RegisterSetting("Tools", "Debugger", GdbPathSetting,
-            new FilePathSetting(
-                "GDB Binary Path",
-                SuggestGdbPath(paths),
-                "Auto-detected",
-                paths.NativeToolsDirectory,
-                PlatformHelper.ExistsOnPath,
-                PlatformHelper.ExeFile)
-            {
-                HoverDescription = "Pfad zur GDB-Executable für Remote-Debugging über gdbserver."
-            });
 
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 

@@ -1,0 +1,15 @@
+archer.svg - GDB "Archer Fish" mascot
+
+Original logo:  Jamie Guinan
+Vector version: Andreas Arnez
+
+License: Creative Commons Attribution-ShareAlike 3.0 United States (CC BY-SA 3.0 US)
+         https://creativecommons.org/licenses/by-sa/3.0/us/
+
+Source:  https://sourceware.org/gdb/mascot/
+File:    https://sourceware.org/gdb/images/archer.svg
+
+The file is redistributed here unmodified. It is licensed separately from GDB
+itself (GPL) and separately from the code in this repository; the ShareAlike
+condition applies to this image and works derived from it, not to the
+surrounding source code.

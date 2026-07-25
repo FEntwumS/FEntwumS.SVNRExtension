@@ -1,10 +1,9 @@
 name: Publish
 
+# Nur manuell ausloesen. Der Workflow erzeugt selbst ein Release, und ein
+# "release: published"-Trigger wuerde sich dadurch endlos neu starten.
 on:
   workflow_dispatch:
-  release:
-    types:
-      - published
 
 jobs:
   build:
@@ -19,11 +18,58 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Get Version
-        uses: kzrnm/get-net-sdk-project-versions-action@v1.3.0
+      - name: Bump Version
         id: get-version
-        with:
-          proj-path: src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj
+        run: |
+          set -euo pipefail
+
+          CSPROJ=src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj
+          JSON=oneware-extension.json
+
+          CURRENT=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$CSPROJ" | head -n1)
+          if [ -z "$CURRENT" ]; then
+            echo "Keine <Version> in $CSPROJ gefunden." >&2
+            exit 1
+          fi
+
+          if ! echo "$CURRENT" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Version '$CURRENT' ist nicht im Format major.minor.patch." >&2
+            exit 1
+          fi
+
+          MAJOR=${CURRENT%%.*}
+          REST=${CURRENT#*.}
+          MINOR=${REST%%.*}
+          PATCH=${REST#*.}
+
+          # Ziffernueberlauf: 0.4.9 -> 0.5.0, 0.9.9 -> 1.0.0.
+          if [ "$PATCH" -lt 9 ]; then
+            NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
+          elif [ "$MINOR" -lt 9 ]; then
+            NEXT="$MAJOR.$((MINOR + 1)).0"
+          else
+            NEXT="$((MAJOR + 1)).0.0"
+          fi
+
+          echo "$CURRENT -> $NEXT"
+
+          sed -i "s:<Version>$CURRENT</Version>:<Version>$NEXT</Version>:" "$CSPROJ"
+
+          # Neue Version an den Anfang der Liste, damit sie im Extension Manager oben steht.
+          jq --arg v "$NEXT" \
+            '.versions = ([{version: $v, targets: [{target: "all"}]}] + .versions)' \
+            "$JSON" > "$JSON.tmp"
+          mv "$JSON.tmp" "$JSON"
+
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+      - name: Commit Version
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj oneware-extension.json
+          git commit -m "Release ${{steps.get-version.outputs.version}}"
+          git push origin HEAD:${{github.ref_name}}
       - name: Build
         run: dotnet build src/FEntwumS.SVNRExtension/FEntwumS.SVNRExtension.csproj -c Release -o publish
       - name: Compress

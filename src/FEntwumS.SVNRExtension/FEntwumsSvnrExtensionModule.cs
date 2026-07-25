@@ -272,7 +272,9 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "bin/gdb",
+                                // Anders als die Archive fuer Windows und Linux entpackt dieses Tarball
+                                // in einen eigenen Ordner, der im Pfad enthalten sein muss.
+                                RelativePath = "gdb-macos-arm64/bin/gdb",
                                 SettingKey = GdbPathSetting
                             }
                         ]

@@ -1,8 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Notifications;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
 using FEntwumS.SVNRExtension.Tools;
@@ -187,14 +189,35 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         logger.Log("[SVNR] Keine GDB-Binary eingerichtet, zeige Installationshinweis.");
 
         var packageWindowService = serviceProvider.Resolve<IPackageWindowService>();
+        var windowService = serviceProvider.Resolve<IWindowService>();
 
-        serviceProvider.Resolve<IWindowService>().ShowNotificationWithButton(
-            "GDB wird zum Debuggen benötigt",
-            "Es ist keine GDB-Binary eingerichtet. Du kannst sie mit einem Klick im Extension Manager installieren.",
-            "GDB installieren",
-            () => _ = packageWindowService.ShowExtensionManagerAndTryInstallAsync(GdbPackage.Id!),
-            type: NotificationType.Warning,
-            expiration: TimeSpan.FromSeconds(20));
+        void ShowHint()
+        {
+            windowService.ShowNotificationWithButton(
+                "GDB wird zum Debuggen benötigt",
+                "Es ist keine GDB-Binary eingerichtet. Du kannst sie mit einem Klick im Extension Manager installieren.",
+                "GDB installieren",
+                () => _ = packageWindowService.ShowExtensionManagerAndTryInstallAsync(GdbPackage.Id!),
+                type: NotificationType.Warning,
+                expiration: TimeSpan.FromSeconds(20));
+        }
+
+        // Auto-Launch-Aktionen laufen noch in OnFrameworkInitializationCompleted, also bevor Avalonia
+        // das Hauptfenster zeigt. Der WindowNotificationManager verwirft Notifications stillschweigend,
+        // solange sein Template nicht angewandt ist - deshalb erst nach dem Oeffnen anzeigen.
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
+            {
+                MainWindow: { } mainWindow
+            })
+        {
+            ShowHint();
+            return;
+        }
+
+        if (mainWindow.IsLoaded)
+            Dispatcher.UIThread.Post(ShowHint, DispatcherPriority.Background);
+        else
+            mainWindow.Opened += (_, _) => Dispatcher.UIThread.Post(ShowHint, DispatcherPriority.Background);
     }
     
     public static readonly Package GdbPackage = new()

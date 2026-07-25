@@ -202,15 +202,23 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         Category = "Binaries",
         Id = "gdb",
         Type = "NativeTool",
-        Name = "GDB Multiarch",
+        Name = "GNU Debugger",
         Description = "GNU Debugger for remote debugging via gdbserver.",
         License = "GPL 3.0",
+        // Archer Fish, das GDB-Maskottchen. Steht unter CC BY-SA 3.0 US und damit unter einer anderen
+        // Lizenz als GDB selbst - die Namensnennung erfolgt über den Mascot-Link unten.
+        IconUrl = "https://sourceware.org/gdb/images/archer.svg",
         Links =
         [
             new PackageLink
             {
                 Name = "GDB",
                 Url = "https://www.sourceware.org/gdb/"
+            },
+            new PackageLink
+            {
+                Name = "Mascot (c) Jamie Guinan, Andreas Arnez - CC BY-SA 3.0 US",
+                Url = "https://creativecommons.org/licenses/by-sa/3.0/us/"
             }
         ],
         Versions =

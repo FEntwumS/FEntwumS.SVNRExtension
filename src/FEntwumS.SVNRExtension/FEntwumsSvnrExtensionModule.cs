@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
@@ -21,85 +22,6 @@ namespace FEntwumS.SVNRExtension;
 
 public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 {
-    public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
-    
-    public static readonly Package GdbPackage = new()
-    {
-        Category = "Binaries",
-        Id = "gdb",
-        Type = "NativeTool",
-        Name = "GDB Multiarch",
-        Description = "GNU Debugger with multi-architecture support for remote debugging via gdbserver.",
-        License = "GPL 3.0",
-        Links =
-        [
-            new PackageLink
-            {
-                Name = "GDB",
-                Url = "https://www.sourceware.org/gdb/"
-            }
-        ],
-        Versions =
-        [
-            new PackageVersion
-            {
-                Version = "1.0.0",
-                Targets =
-                [
-                    new PackageTarget
-                    {
-                        Target = "win-x64",
-                        // GDB 11.2, statisch, --enable-targets=all, exe im Zip-Root (verifiziert)
-                        Url =
-                            "https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "gdb-multiarch.exe",
-                                SettingKey = GdbPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "linux-x64",
-                        // GDB 17.1, musl-statisch, "full" = Python + Cross-Arch, flaches Archiv (verifiziert)
-                        Url =
-                            "https://github.com/guyush1/gdb-static/releases/download/v17.1-static/gdb-static-full-x86_64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "gdb",
-                                SettingKey = GdbPathSetting
-                            }
-                        ]
-                    },
-                    new PackageTarget
-                    {
-                        Target = "osx-arm64",
-                        // GDB 17.2, Homebrew-Ursprung, mit install_name_tool relokiert und
-                        // ad-hoc signiert; --enable-targets=all, Python 3.14 im Bundle.
-                        Url =
-                            "https://github.com/FEntwumS/GDB/releases/download/v0.1.0/gdb-macos-arm64.tar.gz",
-                        AutoSetting =
-                        [
-                            new PackageAutoSetting
-                            {
-                                RelativePath = "bin/gdb",
-                                SettingKey = GdbPathSetting
-                            }
-                        ]
-                    }
-                    // Historie: Ursprünglich war für osx-arm64 kein standalone Prebuilt bekannt;
-                    // Homebrew-gdb war der Vorschlag, benötigt aber lokale Homebrew-Installation.
-                    // Ersetzt durch die FEntwumS-eigene Relozierung (build-gdb.sh im GDB-Repo).
-                ]
-            }
-        ]
-    };
-
     public static readonly string[] SupportedExtensions = [".asm"];
 
     public override IReadOnlyCollection<string> Dependencies
@@ -120,6 +42,11 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         var paths = serviceProvider.Resolve<IPaths>();
         serviceProvider.Resolve<IPackageService>().RegisterPackage(GdbPackage);
+
+        // Erst nach dem Hochfahren prüfen: vorher existiert das Hauptfenster und damit der
+        // NotificationManager noch nicht.
+        serviceProvider.Resolve<IApplicationStateService>()
+            .RegisterAutoLaunchAction(_ => NotifyIfGdbMissing(serviceProvider));
 
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
@@ -244,4 +171,106 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
             }
         });
     }
+    
+    public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
+
+    private static void NotifyIfGdbMissing(IServiceProvider serviceProvider)
+    {
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
+        var logger = serviceProvider.Resolve<ILogger>();
+
+        if (!settingsService.HasSetting(GdbPathSetting)) return;
+
+        var configuredPath = settingsService.GetSettingValue<string>(GdbPathSetting);
+        if (!string.IsNullOrWhiteSpace(configuredPath) && PlatformHelper.Exists(configuredPath)) return;
+
+        logger.Log("[SVNR] Keine GDB-Binary eingerichtet, zeige Installationshinweis.");
+
+        var packageWindowService = serviceProvider.Resolve<IPackageWindowService>();
+
+        serviceProvider.Resolve<IWindowService>().ShowNotificationWithButton(
+            "GDB wird zum Debuggen benötigt",
+            "Es ist keine GDB-Binary eingerichtet. Du kannst sie mit einem Klick im Extension Manager installieren.",
+            "GDB installieren",
+            () => _ = packageWindowService.ShowExtensionManagerAndTryInstallAsync(GdbPackage.Id!),
+            type: NotificationType.Warning,
+            expiration: TimeSpan.FromSeconds(20));
+    }
+    
+    public static readonly Package GdbPackage = new()
+    {
+        Category = "Binaries",
+        Id = "gdb",
+        Type = "NativeTool",
+        Name = "GDB Multiarch",
+        Description = "GNU Debugger for remote debugging via gdbserver.",
+        License = "GPL 3.0",
+        Links =
+        [
+            new PackageLink
+            {
+                Name = "GDB",
+                Url = "https://www.sourceware.org/gdb/"
+            }
+        ],
+        Versions =
+        [
+            new PackageVersion
+            {
+                Version = "1.0.0",
+                Targets =
+                [
+                    new PackageTarget
+                    {
+                        Target = "win-x64",
+                        // GDB 11.2, statisch, --enable-targets=all, exe im Zip-Root (verifiziert)
+                        Url =
+                            "https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "gdb-multiarch.exe",
+                                SettingKey = GdbPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "linux-x64",
+                        // GDB 17.1, musl-statisch, "full" = Python + Cross-Arch, flaches Archiv (verifiziert)
+                        Url =
+                            "https://github.com/guyush1/gdb-static/releases/download/v17.1-static/gdb-static-full-x86_64.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "gdb",
+                                SettingKey = GdbPathSetting
+                            }
+                        ]
+                    },
+                    new PackageTarget
+                    {
+                        Target = "osx-arm64",
+                        // GDB 17.2, Homebrew-Ursprung, mit install_name_tool relokiert und
+                        // ad-hoc signiert; --enable-targets=all, Python 3.14 im Bundle.
+                        Url =
+                            "https://github.com/FEntwumS/GDB/releases/download/v0.1.0/gdb-macos-arm64.tar.gz",
+                        AutoSetting =
+                        [
+                            new PackageAutoSetting
+                            {
+                                RelativePath = "bin/gdb",
+                                SettingKey = GdbPathSetting
+                            }
+                        ]
+                    }
+                    // Historie: Ursprünglich war für osx-arm64 kein standalone Prebuilt bekannt;
+                    // Homebrew-gdb war der Vorschlag, benötigt aber lokale Homebrew-Installation.
+                    // Ersetzt durch die FEntwumS-eigene Relozierung (build-gdb.sh im GDB-Repo).
+                ]
+            }
+        ]
+    };
 }

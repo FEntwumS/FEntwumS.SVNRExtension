@@ -42,14 +42,9 @@ jobs:
           MINOR=${REST%%.*}
           PATCH=${REST#*.}
 
-          # Ziffernueberlauf: 0.4.9 -> 0.5.0, 0.9.9 -> 1.0.0.
-          if [ "$PATCH" -lt 9 ]; then
-            NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
-          elif [ "$MINOR" -lt 9 ]; then
-            NEXT="$MAJOR.$((MINOR + 1)).0"
-          else
-            NEXT="$((MAJOR + 1)).0.0"
-          fi
+          # Nur die Patch-Stelle hochzaehlen, kein Ueberlauf: 0.4.9 -> 0.4.10.
+          # Major und Minor werden ausschliesslich manuell im csproj angehoben.
+          NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
 
           echo "$CURRENT -> $NEXT"
 

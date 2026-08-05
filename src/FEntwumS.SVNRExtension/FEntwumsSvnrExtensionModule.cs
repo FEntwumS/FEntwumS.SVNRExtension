@@ -75,7 +75,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         // lassen. Siehe AsmTypeAssistance.CanAddBreakPoints.
         languageManager.RegisterStandaloneTypeAssistance(typeof(AsmTypeAssistance), SupportedExtensions);
 
-        RegisterDebugStubMenuItem(serviceProvider, windowService, settingsService);
+       // RegisterDebugStubMenuItem(serviceProvider, windowService, settingsService);
 
         projectExplorerService.RegisterConstructContextMenu((x, l) =>
         {
@@ -204,36 +204,36 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     ///     die Einstellung geschrieben - sonst muesste der Nutzer ihn aus dem Log abschreiben, und
     ///     er ist bei jedem Start ein anderer.
     /// </remarks>
-    private static void RegisterDebugStubMenuItem(IServiceProvider serviceProvider, IWindowService windowService,
-        ISettingsService settingsService)
-    {
-        var stub = serviceProvider.Resolve<DebuggingStub>();
-
-        var item = new MenuItemModel("SvnrDebugStub")
-        {
-            Header = StartStubHeader,
-            Icon = new IconModel("Material.BugReport")
-        };
-
-        item.Command = new AsyncRelayCommand(async () =>
-        {
-            if (stub.Endpoint != null)
-            {
-                await stub.StopAsync();
-                settingsService.SetSettingValue(RemoteEndpointSetting, string.Empty);
-                item.Header = StartStubHeader;
-                return;
-            }
-
-            var endpoint = stub.Start();
-            settingsService.SetSettingValue(RemoteEndpointSetting, endpoint);
-            item.Header = $"Stop SVNR Debug Stub ({endpoint})";
-        });
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", item);
-    }
-
-    private const string StartStubHeader = "Start SVNR Debug Stub";
+    // private static void RegisterDebugStubMenuItem(IServiceProvider serviceProvider, IWindowService windowService,
+    //     ISettingsService settingsService)
+    // {
+    //     var stub = serviceProvider.Resolve<DebuggingStub>();
+    //
+    //     var item = new MenuItemModel("SvnrDebugStub")
+    //     {
+    //         Header = StartStubHeader,
+    //         Icon = new IconModel("Material.BugReport")
+    //     };
+    //
+    //     item.Command = new AsyncRelayCommand(async () =>
+    //     {
+    //         if (stub.Endpoint != null)
+    //         {
+    //             await stub.StopAsync();
+    //             settingsService.SetSettingValue(RemoteEndpointSetting, string.Empty);
+    //             item.Header = StartStubHeader;
+    //             return;
+    //         }
+    //
+    //         var endpoint = stub.Start();
+    //         settingsService.SetSettingValue(RemoteEndpointSetting, endpoint);
+    //         item.Header = $"Stop SVNR Debug Stub ({endpoint})";
+    //     });
+    //
+    //     windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", item);
+    // }
+    //
+    // private const string StartStubHeader = "Start SVNR Debug Stub";
 
     private static void NotifyIfGdbMissing(IServiceProvider serviceProvider)
     {

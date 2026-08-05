@@ -33,7 +33,19 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     {
         services.AddSingleton<AsmConverterService>();
         services.AddSingleton<SvnrToolchainService>();
+        //services.AddSingleton<DebuggingStub>();
     }
+
+    /// <summary>
+    ///     Schluessel der Einstellung, in die der Endpunkt des Stubs geschrieben wird.
+    /// </summary>
+    /// <remarks>
+    ///     Wortgleich mit <c>OneWare.Debugger.DebuggerModule.RemoteEndpointSetting</c>. Der Kern
+    ///     veroeffentlicht <c>OneWare.Debugger</c> nicht als NuGet-Paket, deshalb laesst sich die
+    ///     Konstante von hier aus nicht referenzieren - dieselbe Kopplung ueber einen blossen String
+    ///     wie beim GDB-Pfad. Aendert der Kern den Schluessel, faellt das erst zur Laufzeit auf.
+    /// </remarks>
+    private const string RemoteEndpointSetting = "FEntwumS_Debugger_RemoteEndpoint";
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
@@ -57,6 +69,13 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 
         languageManager.RegisterTextMateLanguage("asm", "avares:// FEntwumS.SVNRExtension/Assets/asm.tmLanguage.json",
             SupportedExtensions);
+
+        // Die Grammatik faerbt nur ein. Erst die TypeAssistance macht .asm zu einer Sprache, die
+        // der Editor kennt - und damit zu einer, in deren Randspalte sich Breakpoints setzen
+        // lassen. Siehe AsmTypeAssistance.CanAddBreakPoints.
+        languageManager.RegisterStandaloneTypeAssistance(typeof(AsmTypeAssistance), SupportedExtensions);
+
+        RegisterDebugStubMenuItem(serviceProvider, windowService, settingsService);
 
         projectExplorerService.RegisterConstructContextMenu((x, l) =>
         {
@@ -175,6 +194,46 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     }
     
     public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
+
+    /// <summary>
+    ///     Haengt den Umschalter fuer den <see cref="DebuggingStub" /> ins Menue.
+    /// </summary>
+    /// <remarks>
+    ///     Bewusst ein Menuepunkt und kein automatischer Start: ein Stub, der immer lauscht, belegt
+    ///     einen Port, ohne dass jemand debuggen will. Beim Start wird der vergebene Port gleich in
+    ///     die Einstellung geschrieben - sonst muesste der Nutzer ihn aus dem Log abschreiben, und
+    ///     er ist bei jedem Start ein anderer.
+    /// </remarks>
+    private static void RegisterDebugStubMenuItem(IServiceProvider serviceProvider, IWindowService windowService,
+        ISettingsService settingsService)
+    {
+        var stub = serviceProvider.Resolve<DebuggingStub>();
+
+        var item = new MenuItemModel("SvnrDebugStub")
+        {
+            Header = StartStubHeader,
+            Icon = new IconModel("Material.BugReport")
+        };
+
+        item.Command = new AsyncRelayCommand(async () =>
+        {
+            if (stub.Endpoint != null)
+            {
+                await stub.StopAsync();
+                settingsService.SetSettingValue(RemoteEndpointSetting, string.Empty);
+                item.Header = StartStubHeader;
+                return;
+            }
+
+            var endpoint = stub.Start();
+            settingsService.SetSettingValue(RemoteEndpointSetting, endpoint);
+            item.Header = $"Stop SVNR Debug Stub ({endpoint})";
+        });
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", item);
+    }
+
+    private const string StartStubHeader = "Start SVNR Debug Stub";
 
     private static void NotifyIfGdbMissing(IServiceProvider serviceProvider)
     {

@@ -1,4 +1,5 @@
-﻿using Avalonia.Media;
+﻿using System.Text;
+using Avalonia.Media;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -27,8 +28,12 @@ public class AsmConverterService(IOutputService outputService)
             if (file.Root is not UniversalFpgaProjectRoot root) {throw new Exception("File is not in a suitable Project");}
             
             var projectPath = root.FullPath;
+            var debugPath = Path.Combine(projectPath, "build", "debug");
+            Directory.CreateDirectory(debugPath);
+            var fileName = Path.GetFileNameWithoutExtension(file.Name);
+            var binaryPath = Path.Combine(debugPath, $"{fileName}.bin");
             var vhdlFilePath = Directory.GetFiles(projectPath, "mem_init_package.vhd", SearchOption.AllDirectories).FirstOrDefault("");
-            if (vhdlFilePath.Length == 0)
+            if (string.IsNullOrEmpty(vhdlFilePath))
             {
                 throw new Exception("mem_init_package.vhd not found");
             }
@@ -102,6 +107,15 @@ public class AsmConverterService(IOutputService outputService)
                 }
                 await vhdlWriter.WriteLineAsync($"        {i} => x\"{ramValues.Last()}\" -- {comments.Last()}");
                 await vhdlWriter.WriteLineAsync(tail);
+            }
+
+            await using (var binWriter = new BinaryWriter(new FileStream(binaryPath, FileMode.Create), Encoding.ASCII))
+            {
+                foreach (var value in ramValues)
+                {
+                    binWriter.Write(Convert.ToByte(value.Substring(0,2), 16));
+                    binWriter.Write(Convert.ToByte(value.Substring(2,2), 16));
+                }
             }
             
         }

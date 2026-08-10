@@ -1,9 +1,4 @@
-﻿using System.Text.Json.Nodes;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Media;
-using Avalonia.Styling;
-using OneWare.Essentials.Models;
+﻿using OneWare.Essentials.Models;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem;
 using OneWare.UniversalFpgaProjectSystem.Models;

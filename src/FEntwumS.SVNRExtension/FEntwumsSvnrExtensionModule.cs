@@ -1,16 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Notifications;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
 using FEntwumS.SVNRExtension.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Helpers;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
@@ -25,17 +21,7 @@ namespace FEntwumS.SVNRExtension;
 public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 {
     public static readonly string[] SupportedExtensions = [".asm"];
-
-    public override IReadOnlyCollection<string> Dependencies
-        => ["OssCadSuiteIntegrationModule"];
-
-    public override void RegisterServices(IServiceCollection services)
-    {
-        services.AddSingleton<AsmConverterService>();
-        services.AddSingleton<SvnrToolchainService>();
-        //services.AddSingleton<DebuggingStub>();
-    }
-
+    
     /// <summary>
     ///     Schluessel der Einstellung, in die der Endpunkt des Stubs geschrieben wird.
     /// </summary>
@@ -46,6 +32,18 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     ///     wie beim GDB-Pfad. Aendert der Kern den Schluessel, faellt das erst zur Laufzeit auf.
     /// </remarks>
     private const string RemoteEndpointSetting = "FEntwumS_Debugger_RemoteEndpoint";
+    
+    private const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
+
+
+    public override IReadOnlyCollection<string> Dependencies
+        => ["OssCadSuiteIntegrationModule"];
+
+    public override void RegisterServices(IServiceCollection services)
+    {
+        services.AddSingleton<AsmConverterService>();
+        services.AddSingleton<SvnrToolchainService>();
+    }
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
@@ -53,14 +51,10 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         var projectExplorerService = serviceProvider.Resolve<IProjectExplorerService>();
         var windowService = serviceProvider.Resolve<IWindowService>();
         var fpgaService = serviceProvider.Resolve<FpgaService>();
-        var settingsService = serviceProvider.Resolve<ISettingsService>();
-        var paths = serviceProvider.Resolve<IPaths>();
+        //var settingsService = serviceProvider.Resolve<ISettingsService>();
+        //var paths = serviceProvider.Resolve<IPaths>();
         serviceProvider.Resolve<IPackageService>().RegisterPackage(GdbPackage);
-
-        // Erst nach dem Hochfahren prüfen: vorher existiert das Hauptfenster und damit der
-        // NotificationManager noch nicht.
-        serviceProvider.Resolve<IApplicationStateService>()
-            .RegisterAutoLaunchAction(_ => NotifyIfGdbMissing(serviceProvider));
+        
 
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
@@ -74,9 +68,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         // der Editor kennt - und damit zu einer, in deren Randspalte sich Breakpoints setzen
         // lassen. Siehe AsmTypeAssistance.CanAddBreakPoints.
         languageManager.RegisterStandaloneTypeAssistance(typeof(AsmTypeAssistance), SupportedExtensions);
-
-       // RegisterDebugStubMenuItem(serviceProvider, windowService, settingsService);
-
+        
         projectExplorerService.RegisterConstructContextMenu((x, l) =>
         {
             if (x is [IProjectFile { Extension: ".asm" } file])
@@ -193,92 +185,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         });
     }
     
-    public const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
-
-    /// <summary>
-    ///     Haengt den Umschalter fuer den <see cref="DebuggingStub" /> ins Menue.
-    /// </summary>
-    /// <remarks>
-    ///     Bewusst ein Menuepunkt und kein automatischer Start: ein Stub, der immer lauscht, belegt
-    ///     einen Port, ohne dass jemand debuggen will. Beim Start wird der vergebene Port gleich in
-    ///     die Einstellung geschrieben - sonst muesste der Nutzer ihn aus dem Log abschreiben, und
-    ///     er ist bei jedem Start ein anderer.
-    /// </remarks>
-    // private static void RegisterDebugStubMenuItem(IServiceProvider serviceProvider, IWindowService windowService,
-    //     ISettingsService settingsService)
-    // {
-    //     var stub = serviceProvider.Resolve<DebuggingStub>();
-    //
-    //     var item = new MenuItemModel("SvnrDebugStub")
-    //     {
-    //         Header = StartStubHeader,
-    //         Icon = new IconModel("Material.BugReport")
-    //     };
-    //
-    //     item.Command = new AsyncRelayCommand(async () =>
-    //     {
-    //         if (stub.Endpoint != null)
-    //         {
-    //             await stub.StopAsync();
-    //             settingsService.SetSettingValue(RemoteEndpointSetting, string.Empty);
-    //             item.Header = StartStubHeader;
-    //             return;
-    //         }
-    //
-    //         var endpoint = stub.Start();
-    //         settingsService.SetSettingValue(RemoteEndpointSetting, endpoint);
-    //         item.Header = $"Stop SVNR Debug Stub ({endpoint})";
-    //     });
-    //
-    //     windowService.RegisterMenuItem("MainWindow_MainMenu/Extras", item);
-    // }
-    //
-    // private const string StartStubHeader = "Start SVNR Debug Stub";
-
-    private static void NotifyIfGdbMissing(IServiceProvider serviceProvider)
-    {
-        var settingsService = serviceProvider.Resolve<ISettingsService>();
-        var logger = serviceProvider.Resolve<ILogger>();
-
-        if (!settingsService.HasSetting(GdbPathSetting)) return;
-
-        var configuredPath = settingsService.GetSettingValue<string>(GdbPathSetting);
-        if (!string.IsNullOrWhiteSpace(configuredPath) && PlatformHelper.Exists(configuredPath)) return;
-
-        logger.Log("[SVNR] Keine GDB-Binary eingerichtet, zeige Installationshinweis.");
-
-        var packageWindowService = serviceProvider.Resolve<IPackageWindowService>();
-        var windowService = serviceProvider.Resolve<IWindowService>();
-
-        void ShowHint()
-        {
-            windowService.ShowNotificationWithButton(
-                "GDB wird zum Debuggen benötigt",
-                "Es ist keine GDB-Binary eingerichtet. Du kannst sie mit einem Klick im Extension Manager installieren.",
-                "GDB installieren",
-                () => _ = packageWindowService.ShowExtensionManagerAndTryInstallAsync(GdbPackage.Id!),
-                type: NotificationType.Warning,
-                expiration: TimeSpan.FromSeconds(20));
-        }
-
-        // Auto-Launch-Aktionen laufen noch in OnFrameworkInitializationCompleted, also bevor Avalonia
-        // das Hauptfenster zeigt. Der WindowNotificationManager verwirft Notifications stillschweigend,
-        // solange sein Template nicht angewandt ist - deshalb erst nach dem Oeffnen anzeigen.
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime
-            {
-                MainWindow: { } mainWindow
-            })
-        {
-            ShowHint();
-            return;
-        }
-
-        if (mainWindow.IsLoaded)
-            Dispatcher.UIThread.Post(ShowHint, DispatcherPriority.Background);
-        else
-            mainWindow.Opened += (_, _) => Dispatcher.UIThread.Post(ShowHint, DispatcherPriority.Background);
-    }
-    
     public static readonly Package GdbPackage = new()
     {
         Category = "Binaries",
@@ -346,8 +252,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     new PackageTarget
                     {
                         Target = "osx-arm64",
-                        // GDB 17.2, Homebrew-Ursprung, mit install_name_tool relokiert und
-                        // ad-hoc signiert; --enable-targets=all, Python 3.14 im Bundle.
                         Url =
                             "https://github.com/FEntwumS/GDB/releases/download/v0.1.0/gdb-macos-arm64.tar.gz",
                         AutoSetting =
@@ -361,9 +265,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                             }
                         ]
                     }
-                    // Historie: Ursprünglich war für osx-arm64 kein standalone Prebuilt bekannt;
-                    // Homebrew-gdb war der Vorschlag, benötigt aber lokale Homebrew-Installation.
-                    // Ersetzt durch die FEntwumS-eigene Relozierung (build-gdb.sh im GDB-Repo).
                 ]
             }
         ]

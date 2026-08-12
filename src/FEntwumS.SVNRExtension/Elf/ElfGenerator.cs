@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 
 using FEntwumS.SVNRExtension.Elf.Dwarf;
 using FEntwumS.SVNRExtension.Elf.Dwarf.Constants;
-using FEntwumS.SVNRExtension.Entities;
+using FEntwumS.SVNRExtension.Elf.Entities;
 
 namespace FEntwumS.SVNRExtension.Elf;
 

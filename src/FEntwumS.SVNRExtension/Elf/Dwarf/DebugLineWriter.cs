@@ -1,10 +1,6 @@
-using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
-
-using FEntwumS.SVNRExtension.Entities;
+using FEntwumS.SVNRExtension.Elf.Entities;
 
 namespace FEntwumS.SVNRExtension.Elf.Dwarf;
 

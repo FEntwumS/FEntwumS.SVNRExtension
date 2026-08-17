@@ -31,10 +31,8 @@
 
     <ItemGroup>
         <PackageReference Include="OneWare.GhdlExtension" Version="1.0.4" Private="true" ExcludeAssets="runtime;Native" />
-        <!-- Lokal gepackter Fork-Stand: nur dort gibt es OneWare.Essentials.Debugger (D-3).
-             Vor einer Veroeffentlichung auf die offizielle Version zurueckstellen, sonst laesst
-             sich das Plugin nicht gegen ein oeffentliches OneWare aufloesen. -->
-        <PackageReference Include="OneWare.Essentials" Version="1.0.99-svnrlocal" Private="false" ExcludeAssets="runtime;Native" />
+        <!-- Veroeffentlichter Stand. OneWare.Essentials.Debugger fehlt hier noch (D-3). -->
+        <PackageReference Include="OneWare.Essentials" Version="1.0.22" Private="false" ExcludeAssets="runtime;Native" />
         <PackageReference Include="OneWare.OssCadSuiteIntegration" Version="1.0.22" Private="false" ExcludeAssets="runtime;Native" />
         <PackageReference Include="OneWare.UniversalFpgaProjectSystem" Version="1.0.22" Private="false" ExcludeAssets="runtime;Native" />
     </ItemGroup>

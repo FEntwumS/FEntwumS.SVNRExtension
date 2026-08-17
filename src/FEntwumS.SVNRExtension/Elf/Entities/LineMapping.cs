@@ -1,4 +1,4 @@
-namespace FEntwumS.SVNRExtension.Entities;
+namespace FEntwumS.SVNRExtension.Elf.Entities;
 
 /// <summary>
 /// Ein Schritt im Line Number Program: Zeilen- und Adressvorschub relativ zum

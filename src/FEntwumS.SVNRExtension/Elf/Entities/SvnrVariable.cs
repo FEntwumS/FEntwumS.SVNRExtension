@@ -1,4 +1,4 @@
-namespace FEntwumS.SVNRExtension.Entities;
+namespace FEntwumS.SVNRExtension.Elf.Entities;
 
 /// <summary>
 /// Eine vom Assembler erkannte SVNR-Variable. Entspricht <c>Variable</c> aus

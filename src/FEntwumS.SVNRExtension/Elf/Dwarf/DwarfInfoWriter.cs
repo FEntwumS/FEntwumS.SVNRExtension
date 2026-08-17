@@ -161,7 +161,7 @@ internal sealed class DwarfInfoWriter
         }
     }
 
-    /// <summary>ELFDATA2LSB - explizit Little Endian, unabhaengig von der Host-Architektur.</summary>
+    //ELFDATA2LSB - explizit Little Endian, unabhaengig von der Host-Architektur.
     private static byte[] UInt32Le(uint value)
     {
         var bytes = new byte[4];

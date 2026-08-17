@@ -1,10 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
 using FEntwumS.SVNRExtension.Tools;
+using FEntwumS.SVNRExtension.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Models;
@@ -21,19 +23,18 @@ namespace FEntwumS.SVNRExtension;
 public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 {
     public static readonly string[] SupportedExtensions = [".asm"];
-    
-    /// <summary>
-    ///     Schluessel der Einstellung, in die der Endpunkt des Stubs geschrieben wird.
-    /// </summary>
-    /// <remarks>
-    ///     Wortgleich mit <c>OneWare.Debugger.DebuggerModule.RemoteEndpointSetting</c>. Der Kern
+
+    ///      Schluessel der Einstellung, in die der Endpunkt des Stubs geschrieben wird.
+    ///      Wortgleich mit <c>OneWare.Debugger.DebuggerModule.RemoteEndpointSetting</c>. Der Kern
     ///     veroeffentlicht <c>OneWare.Debugger</c> nicht als NuGet-Paket, deshalb laesst sich die
     ///     Konstante von hier aus nicht referenzieren - dieselbe Kopplung ueber einen blossen String
     ///     wie beim GDB-Pfad. Aendert der Kern den Schluessel, faellt das erst zur Laufzeit auf.
-    /// </remarks>
-    private const string RemoteEndpointSetting = "FEntwumS_Debugger_RemoteEndpoint";
-    
+    public const string RemoteEndpointSetting = "FEntwumS_Debugger_RemoteEndpoint";
+
     private const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
+
+    ///     Serielle Schnittstelle zum SVNR. Leer heisst: selbst suchen.
+    public const string SerialPortSetting = "FEntwumS_Svnr_SerialPort";
 
 
     public override IReadOnlyCollection<string> Dependencies
@@ -43,6 +44,11 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     {
         services.AddSingleton<AsmConverterService>();
         services.AddSingleton<SvnrToolchainService>();
+
+        services.AddSingleton<SvnrDebugBuildService>();
+        services.AddSingleton<RemoteStubService>();
+        services.AddSingleton<SvnrDebugSessionService>();
+        services.AddSingleton<SvnrDebugToolBarViewModel>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -51,10 +57,18 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         var projectExplorerService = serviceProvider.Resolve<IProjectExplorerService>();
         var windowService = serviceProvider.Resolve<IWindowService>();
         var fpgaService = serviceProvider.Resolve<FpgaService>();
-        //var settingsService = serviceProvider.Resolve<ISettingsService>();
-        //var paths = serviceProvider.Resolve<IPaths>();
+        var settingsService = serviceProvider.Resolve<ISettingsService>();
         serviceProvider.Resolve<IPackageService>().RegisterPackage(GdbPackage);
-        
+
+        settingsService.RegisterSetting("Tools", "SVNR", SerialPortSetting,
+            new TextBoxSetting("Serial Port", string.Empty,
+                "z. B. /dev/ttyUSB0, /dev/cu.usbserial-1420 oder COM3")
+            {
+                HoverDescription = "Serial port of the SVNR board. Leave empty to probe all ports."
+            });
+
+        RegisterDebugEntryPoints(serviceProvider, windowService);
+
 
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
@@ -68,7 +82,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         // der Editor kennt - und damit zu einer, in deren Randspalte sich Breakpoints setzen
         // lassen. Siehe AsmTypeAssistance.CanAddBreakPoints.
         languageManager.RegisterStandaloneTypeAssistance(typeof(AsmTypeAssistance), SupportedExtensions);
-        
+
         projectExplorerService.RegisterConstructContextMenu((x, l) =>
         {
             if (x is [IProjectFile { Extension: ".asm" } file])
@@ -184,7 +198,44 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
             }
         });
     }
-    
+
+    // Bewusst nicht in der CompileMenuExtension: Die gehoert zum Compile-Pfad. Der Debug-Einstieg
+    // haengt an der Werkzeugleiste und am FPGA-Menue und kommt ohne die Toolchain aus.
+    private static void RegisterDebugEntryPoints(IServiceProvider serviceProvider, IWindowService windowService)
+    {
+        var viewModel = serviceProvider.Resolve<SvnrDebugToolBarViewModel>();
+
+        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new OneWareUiExtension(_ =>
+        {
+            var button = new Button
+            {
+                Command = viewModel.StartDebugCommand,
+                Padding = new Thickness(6, 3),
+                VerticalAlignment = VerticalAlignment.Center,
+                Content = new Image
+                {
+                    Width = 16,
+                    Height = 16,
+                    Source = Application.Current!.FindResource(
+                        Application.Current!.RequestedThemeVariant, "Material.Bug") as IImage
+                }
+            };
+
+            ToolTip.SetTip(button, "Debug on SVNR");
+            button.Bind(Visual.IsVisibleProperty,
+                new Binding(nameof(SvnrDebugToolBarViewModel.IsAvailable)) { Source = viewModel });
+
+            return button;
+        }));
+
+        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA",
+            new MenuItemModel("SvnrDebug")
+            {
+                Header = "Debug on SVNR",
+                Command = viewModel.StartDebugCommand
+            });
+    }
+
     public static readonly Package GdbPackage = new()
     {
         Category = "Binaries",

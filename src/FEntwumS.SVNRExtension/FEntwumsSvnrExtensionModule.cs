@@ -1,14 +1,13 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
 using FEntwumS.SVNRExtension.Tools;
-using FEntwumS.SVNRExtension.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using OneWare.Essentials.Debugger;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;
@@ -47,8 +46,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 
         services.AddSingleton<SvnrDebugBuildService>();
         services.AddSingleton<RemoteStubService>();
-        services.AddSingleton<SvnrDebugSessionService>();
-        services.AddSingleton<SvnrDebugToolBarViewModel>();
+        services.AddSingleton<SvnrDebugLaunchProvider>();
     }
 
     public override void Initialize(IServiceProvider serviceProvider)
@@ -67,8 +65,9 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                 HoverDescription = "Serial port of the SVNR board. Leave empty to probe all ports."
             });
 
-        RegisterDebugEntryPoints(serviceProvider, windowService);
-
+        // Der Debug-Einstieg ist der generische Knopf im Debug-Panel des Kerns. Diese Erweiterung
+        // bringt dafuer keinen eigenen Knopf mit, sondern nur den Vorbereiter, den der Kern fragt.
+        serviceProvider.Resolve<IDebuggerService>().RegisterLaunchProvider<SvnrDebugLaunchProvider>();
 
         serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
@@ -197,43 +196,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                 x.Icon?.RemoveOverlay("ConstraintFile");
             }
         });
-    }
-
-    // Bewusst nicht in der CompileMenuExtension: Die gehoert zum Compile-Pfad. Der Debug-Einstieg
-    // haengt an der Werkzeugleiste und am FPGA-Menue und kommt ohne die Toolchain aus.
-    private static void RegisterDebugEntryPoints(IServiceProvider serviceProvider, IWindowService windowService)
-    {
-        var viewModel = serviceProvider.Resolve<SvnrDebugToolBarViewModel>();
-
-        windowService.RegisterUiExtension("MainWindow_RoundToolBarExtension", new OneWareUiExtension(_ =>
-        {
-            var button = new Button
-            {
-                Command = viewModel.StartDebugCommand,
-                Padding = new Thickness(6, 3),
-                VerticalAlignment = VerticalAlignment.Center,
-                Content = new Image
-                {
-                    Width = 16,
-                    Height = 16,
-                    Source = Application.Current!.FindResource(
-                        Application.Current!.RequestedThemeVariant, "Material.Bug") as IImage
-                }
-            };
-
-            ToolTip.SetTip(button, "Debug on SVNR");
-            button.Bind(Visual.IsVisibleProperty,
-                new Binding(nameof(SvnrDebugToolBarViewModel.IsAvailable)) { Source = viewModel });
-
-            return button;
-        }));
-
-        windowService.RegisterMenuItem("MainWindow_MainMenu/FPGA",
-            new MenuItemModel("SvnrDebug")
-            {
-                Header = "Debug on SVNR",
-                Command = viewModel.StartDebugCommand
-            });
     }
 
     public static readonly Package GdbPackage = new()

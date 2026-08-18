@@ -6,5 +6,9 @@ riderModule.iml
 /_ReSharper.Caches/
 .idea
 
+# Benutzer- und rechnerbezogene IDE-Einstellungen (Rider, Visual Studio).
+# Enthaelt u. a. absolute Pfade des jeweiligen Rechners.
+*.user
+
 # Lokale Notizen, nicht auschecken
 *.local.md

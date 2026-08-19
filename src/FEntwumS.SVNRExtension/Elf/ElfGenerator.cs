@@ -196,7 +196,7 @@ public sealed class ElfGenerator
         header[2] = (byte)'L';
         header[3] = (byte)'F';
         header[4] = 1;                              // ELFCLASS32
-        header[5] = 1;                              // ELFDATA2LSB
+        header[5] = 1;                              // ELFDATA2LSB = 1 = LITTLE-ENDIAN KOMPLETTE ENDIANESS kommt HIER her
         header[6] = 1;                              // EV_CURRENT
 
         var span = header.AsSpan();

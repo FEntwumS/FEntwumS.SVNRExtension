@@ -86,12 +86,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         {
             if (x is [IProjectFile { Extension: ".asm" } file])
             {
-                l.Add(new MenuItemModel("AsmConversion")
-                {
-                    Header = "Convert .asm",
-                    Command = new AsyncRelayCommand(() => asmConverterService.ConvertAsync(file)),
-                });
-
                 // Nicht mehr an der Toolchain festgemacht -> das Registrieren gehoert zum Debuggen,
                 // und das soll auch dann gehen, wenn niemand synthetisiert. Dieselbe
                 // Begruendung wie in SvnrDebugLaunchProvider.CanPrepare. Kriterium ist die
@@ -102,7 +96,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     l.Add(new MenuItemModel("RegisterAsm")
                     {
                         Header = "Use this file to Compile",
-                        Command = new AsyncRelayCommand(() => SvnrSettingsHelper.UpdateProjectAsmFile(file)),
+                        Command = new AsyncRelayCommand(() => SvnrSettingsHelper.UpdateProjectAsmFile(file)), // h
                     });
                 }
             }

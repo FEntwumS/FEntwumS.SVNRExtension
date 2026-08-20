@@ -8,6 +8,7 @@ namespace FEntwumS.SVNRExtension.Tools;
 public class SvnrSettingsHelper
 {
     public static Task UpdateProjectAsmFile(IProjectFile file)
+    // Hier soll der Grüne Harken in der UI gesetzt werden + die Datei als Quelle für Asssemblierung und Debugging genommen werden
     {
         if (file.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot)
             return Task.CompletedTask;

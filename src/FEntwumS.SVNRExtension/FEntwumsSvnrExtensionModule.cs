@@ -23,7 +23,9 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 {
     public static readonly string[] SupportedExtensions = [".asm"];
 
-    ///      Schluessel der Einstellung, in die der Endpunkt des Stubs geschrieben wird.
+    ///      Schluessel der Einstellung, die festlegt, an welchem Port der Stub lauscht.
+    ///      Ist sie leer, sucht das Betriebssystem einen freien Port, und der gefundene
+    ///      Endpunkt wird zurueckgeschrieben - sonst gilt der eingetragene unveraendert.
     ///      Wortgleich mit <c>OneWare.Debugger.DebuggerModule.RemoteEndpointSetting</c>. Der Kern
     ///     veroeffentlicht <c>OneWare.Debugger</c> nicht als NuGet-Paket, deshalb laesst sich die
     ///     Konstante von hier aus nicht referenzieren - dieselbe Kopplung ueber einen blossen String
@@ -229,9 +231,11 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     new PackageTarget
                     {
                         Target = "win-x64",
-                        // GDB 11.2, statisch, --enable-targets=all, exe im Zip-Root (verifiziert)
+                        
                         Url =
-                            "https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip",
+                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.0/xxx",
+                            // GDB 11.2, statisch, --enable-targets=all, exe im Zip-Root (verifiziert) akzeptiert keine target.xml
+                            //"https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -244,9 +248,11 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        // GDB 17.1, musl-statisch, "full" = Python + Cross-Arch, flaches Archiv (verifiziert)
+                        
                         Url =
-                            "https://github.com/guyush1/gdb-static/releases/download/v17.1-static/gdb-static-full-x86_64.tar.gz",
+                            //"https://github.com/FEntwumS/GDB/releases/download/v0.2.0/gdb-linux-x64-py.tar.gz ",
+                            // GDB 17.1, musl-statisch, "full" = Python + Cross-Arch, flaches Archiv (verifiziert)
+                            "https://github.com/guyush1/gdb-static/releases/download/v17.2-static/gdb-static-full-x86_64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting

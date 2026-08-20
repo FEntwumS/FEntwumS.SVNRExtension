@@ -33,20 +33,31 @@ public sealed class RemoteStubService : IDisposable
         _transport = transport;
         _client = new SvnrBootloaderClient(transport);
 
-        if (!_client.TestCommunication())
-            throw new InvalidOperationException("Am seriellen Port hat kein SVNR geantwortet.");
+        // Scheitert der Start auf halbem Weg - seit dem einstellbaren Port vor allem, weil
+        // diesen schon jemand haelt -, muss die serielle Schnittstelle wieder frei werden.
+        // Der Aufrufer raeumt nur auf, was laeuft, und das tut ein halb gestarteter Stub nicht.
+        try
+        {
+            if (!_client.TestCommunication())
+                throw new InvalidOperationException("Am seriellen Port hat kein SVNR geantwortet.");
 
-        _client.SwitchToDebug();
-        _client.DebugReset();
+            _client.SwitchToDebug();
+            _client.DebugReset();
 
-        _listener = new TcpListener(IPAddress.Loopback, tcpPort);
-        _listener.Start(1);
-        Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
+            _listener = new TcpListener(IPAddress.Loopback, tcpPort);
+            _listener.Start(1);
+            Port = ((IPEndPoint)_listener.LocalEndpoint).Port;
 
-        _cancellationToken = new CancellationTokenSource();
-        _sessionLoop = Task.Run(() => AcceptSessions(_cancellationToken.Token));
+            _cancellationToken = new CancellationTokenSource();
+            _sessionLoop = Task.Run(() => AcceptSessions(_cancellationToken.Token));
 
-        return Port;
+            return Port;
+        }
+        catch
+        {
+            Stop();
+            throw;
+        }
     }
 
     public void LoadProgram(byte[] image)
@@ -158,10 +169,24 @@ public sealed class RemoteStubService : IDisposable
         }
     }
 
-    private static string ReadTargetDescription()
+    /// <summary>
+    /// Pfad der Zielbeschreibung neben der Erweiterung.
+    /// </summary>
+    /// <remarks>
+    /// Der Stub liefert ihren Inhalt auf Anfrage ueber <c>qXfer:features:read</c> aus. GDB
+    /// braucht die Registeraufteilung aber schon, bevor es das erste <c>g</c>-Paket liest,
+    /// deshalb verweist die Kommandodatei des Programms zusaetzlich auf diese Datei.
+    /// </remarks>
+    public static string TargetDescriptionPath()
     {
         var directory = Path.GetDirectoryName(typeof(RemoteStubService).Assembly.Location)!;
-        var path = Path.Combine(directory, "Assets", TargetDescriptionFile);
+
+        return Path.Combine(directory, "Assets", TargetDescriptionFile);
+    }
+
+    private static string ReadTargetDescription()
+    {
+        var path = TargetDescriptionPath();
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Die Zielbeschreibung fehlt: {path}", path);

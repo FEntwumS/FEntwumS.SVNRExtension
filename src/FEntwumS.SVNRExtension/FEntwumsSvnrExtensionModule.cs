@@ -93,7 +93,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                 });
 
                 // Nicht mehr an der Toolchain festgemacht -> das Registrieren gehoert zum Debuggen,
-                // und das soll auch dann gehen, wenn synthetisiert gerade niemand. Dieselbe
+                // und das soll auch dann gehen, wenn niemand synthetisiert. Dieselbe
                 // Begruendung wie in SvnrDebugLaunchProvider.CanPrepare. Kriterium ist die
                 // Dateiendung, die oben schon geprueft ist.
                 if (file.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot &&

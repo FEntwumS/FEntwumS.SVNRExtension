@@ -3,7 +3,8 @@ using FEntwumS.SVNRExtension.Asm.Entities;
 using FEntwumS.SVNRExtension.Sbdp;
 using FEntwumS.SVNRExtension.Tools;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Debugger;
+using OneWare.Essentials.Debugger.Entities;
+using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Models;
 

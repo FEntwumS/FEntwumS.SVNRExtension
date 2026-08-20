@@ -7,7 +7,7 @@ using FEntwumS.SVNRExtension.Services;
 using FEntwumS.SVNRExtension.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using OneWare.Essentials.Debugger;
+using OneWare.Essentials.Debugger.Interfaces;
 using OneWare.Essentials.Models;
 using OneWare.Essentials.PackageManager;
 using OneWare.Essentials.Services;

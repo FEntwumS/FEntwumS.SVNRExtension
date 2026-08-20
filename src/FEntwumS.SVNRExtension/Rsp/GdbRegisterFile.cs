@@ -17,8 +17,17 @@ public static class GdbRegisterFile
 
         var builder = new StringBuilder();
 
+        // Die Reihenfolge folgt den Registernummern, die GDB aus target.xml aufbaut - nicht
+        // der Reihenfolge in der XML-Datei. Erst d0..sp, dann ps und pc, und erst dahinter
+        // die SVNR-Register; siehe GdbRegisterNumber. Die elf leeren FPU-Plaetze dazwischen
+        // haben Groesse 0 und belegen hier kein Byte. Macht 16*4 + 4 + 4 + 8*2 = 88 Byte.
         for (var i = 0; i < GdbRegisterNumber.UnusedM68kRegisterCount; i++)
             builder.Append(RspHex.LittleEndian32(0));
+
+        // ps kennt der SVNR nicht; pc traegt den Programmzaehler, damit GDB weiss, wo das
+        // Ziel steht - dieselbe Quelle wie beim einzeln abgefragten Register.
+        builder.Append(RspHex.LittleEndian32(0));
+        builder.Append(RspHex.LittleEndian32(programmzaehler));
 
         builder.Append(RspHex.LittleEndian16(akku));
         builder.Append(RspHex.LittleEndian16(programmzaehler));
@@ -28,9 +37,6 @@ public static class GdbRegisterFile
         builder.Append(RspHex.LittleEndian16(FlagValue(aluFlags, AluFlagMask.GreaterZero)));
         builder.Append(RspHex.LittleEndian16(FlagValue(aluFlags, AluFlagMask.EqualZero)));
         builder.Append(RspHex.LittleEndian16(0));
-
-        builder.Append(RspHex.LittleEndian32(0));
-        builder.Append(RspHex.LittleEndian32(programmzaehler));
 
         return builder.ToString();
     }

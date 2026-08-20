@@ -82,7 +82,17 @@ public static partial class SvnrAssembler
             (ushort)((opcode << 8) | operand), comment);
     }
 
+    // Die Datenvariante steht bewusst vor der Befehlsvariante. Andersherum verschluckt
+    // [A-Za-z]{2,4} den Anfang eines Datenworts, denn a bis f sind auch Buchstaben: aus
+    // "ffff" wurde die Mnemonik "ff" mit Operand "ff" und damit ein "Unbekannter Befehl".
+    // Betroffen war jedes Datenwort, dessen erste beiden Stellen Buchstaben sind.
+    //
+    // Umgekehrt kann die Datenvariante keinen echten Befehl schlucken: sie verlangt vier
+    // Hexzeichen am Stueck, und zwischen Mnemonik und Operand steht ein Leerzeichen.
+    // Steht keines, greift das Backtracking - "DEC00" faellt auf die Befehlsvariante
+    // zurueck, weil nach den vier Zeichen "DEC0" noch eine "0" uebrig bliebe. ADD und DEC
+    // sind die einzigen Mnemoniken, die ausschliesslich aus Hexbuchstaben bestehen.
     [GeneratedRegex(
-        @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?:(?<opcode>[A-Za-z]{2,4})\s*(?<operand>[0-9A-Fa-f]{2})|(?<data>[0-9A-Fa-f]{4}))\s*(?:;\s*(?<comment>.*))?$")]
+        @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?:(?<data>[0-9A-Fa-f]{4})|(?<opcode>[A-Za-z]{2,4})\s*(?<operand>[0-9A-Fa-f]{2}))\s*(?:;\s*(?<comment>.*))?$")]
     private static partial Regex LinePattern();
 }

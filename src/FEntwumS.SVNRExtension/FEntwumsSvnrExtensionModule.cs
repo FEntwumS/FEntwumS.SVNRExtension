@@ -225,7 +225,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.0.0",
+                Version = "1.0.1",
                 Targets =
                 [
                     new PackageTarget
@@ -233,14 +233,13 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                         Target = "win-x64",
                         
                         Url =
-                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.0/xxx",
-                            // GDB 11.2, statisch, --enable-targets=all, exe im Zip-Root (verifiziert) akzeptiert keine target.xml
-                            //"https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip",
+                            "https://github.com/FEntwumSGDB/releases/download/v0.3.0/gdb-windows-x86_64.tar.gz",
+                            //"https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip", //GDB 11.2 --enable-targets=all akzeptiert keine target.xml
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "gdb-multiarch.exe",
+                                RelativePath = " bin/gdb-multiarch.exe",
                                 SettingKey = GdbPathSetting
                             }
                         ]
@@ -248,17 +247,16 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     new PackageTarget
                     {
                         Target = "linux-x64",
-                        
                         Url =
-                            //"https://github.com/FEntwumS/GDB/releases/download/v0.2.0/gdb-linux-x64-py.tar.gz ",
-                            // GDB 17.1, musl-statisch, "full" = Python + Cross-Arch, flaches Archiv (verifiziert)
-                            "https://github.com/guyush1/gdb-static/releases/download/v17.2-static/gdb-static-full-x86_64.tar.gz",
+                           //"https://github.com/guyush1/gdb-static/releases/download/v17.1-static/gdb-static-full-x86_64.tar.gz"
+                             "https://github.com/FEntwumS/GDB/releases/download/v0.3.0/gdb-linux-x86_64-py.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "gdb",
+                                RelativePath = "bin/gdb-multiarch-py",
                                 SettingKey = GdbPathSetting
+                                
                             }
                         ]
                     },
@@ -266,14 +264,12 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     {
                         Target = "osx-arm64",
                         Url =
-                            "https://github.com/FEntwumS/GDB/releases/download/v0.1.0/gdb-macos-arm64.tar.gz",
+                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.0/gdb-macos-arm64-py.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                // Anders als die Archive fuer Windows und Linux entpackt dieses Tarball
-                                // in einen eigenen Ordner, der im Pfad enthalten sein muss.
-                                RelativePath = "gdb-macos-arm64/bin/gdb",
+                                RelativePath = "bin/gdb-multiarch-py",
                                 SettingKey = GdbPathSetting
                             }
                         ]

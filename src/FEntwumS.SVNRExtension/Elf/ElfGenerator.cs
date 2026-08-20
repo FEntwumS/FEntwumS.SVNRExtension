@@ -53,23 +53,29 @@ public sealed class ElfGenerator
     public byte PointerSize { get; set; } = 4;
 
     /// <summary>
-    /// Erzeugt <c>&lt;fileName ohne Endung&gt;.elf</c> in <paramref name="debugDirectory"/>
+    /// Erzeugt <c>&lt;Quelldatei ohne Endung&gt;.elf</c> in <paramref name="debugDirectory"/>
     /// und liefert den Pfad der geschriebenen Datei.
     /// </summary>
+    /// <param name="sourceRelativePath">
+    /// Pfad der Quelldatei relativ zu <paramref name="projectDirectory"/>, mit
+    /// Vorwaertsschraegstrichen - etwa <c>asm/blink.asm</c>. Bewusst nicht der blosse
+    /// Dateiname: GDB setzt die Quelldatei als <c>DW_AT_comp_dir</c> + Name zusammen, und
+    /// liegt die Datei in einem Unterordner, zeigt der blosse Name ins Leere.
+    /// </param>
     /// <exception cref="InvalidDataException">Template unbrauchbar.</exception>
     /// <exception cref="IOException">Datei konnte nicht geschrieben werden.</exception>
     public string CreateElfFile(
         string debugDirectory,
         string elfTemplatePath,
         string projectDirectory,
-        string sourceFileName,
+        string sourceRelativePath,
         IReadOnlyList<LineMapping> lineMappings,
         IReadOnlyList<SvnrVariable> variables)
     {
         if (debugDirectory is null) throw new ArgumentNullException(nameof(debugDirectory));
         if (elfTemplatePath is null) throw new ArgumentNullException(nameof(elfTemplatePath));
         if (projectDirectory is null) throw new ArgumentNullException(nameof(projectDirectory));
-        if (sourceFileName is null) throw new ArgumentNullException(nameof(sourceFileName));
+        if (sourceRelativePath is null) throw new ArgumentNullException(nameof(sourceRelativePath));
         if (lineMappings is null) throw new ArgumentNullException(nameof(lineMappings));
         if (variables is null) throw new ArgumentNullException(nameof(variables));
 
@@ -78,7 +84,7 @@ public sealed class ElfGenerator
 
         // ---- 2./3. Debug-Sektionen -------------------------------------------
         var strings = new DwarfStringTable();
-        var compileUnit = BuildCompileUnit(strings, projectDirectory, sourceFileName, variables);
+        var compileUnit = BuildCompileUnit(strings, projectDirectory, sourceRelativePath, variables);
 
         var infoWriter = new DwarfInfoWriter(PointerSize);
         var debugInfo = infoWriter.WriteCompileUnit(compileUnit);
@@ -93,7 +99,7 @@ public sealed class ElfGenerator
         data[".debug_info"] = debugInfo;
         data[".debug_abbrev"] = debugAbbrev;
         data[".debug_str"] = strings.ToBytes();      // erst jetzt - der Baum kann Strings nachgelegt haben
-        data[".debug_line"] = DebugLineWriter.Write(projectDirectory, sourceFileName, lineMappings);
+        data[".debug_line"] = DebugLineWriter.Write(projectDirectory, sourceRelativePath, lineMappings);
         data[".debug_aranges"] = DebugArangesWriter.Write(HighPc, PointerSize);
 
         // Die Relocations stammen aus dem x86-Template, ihre Offsets zeigen in ein Layout,
@@ -132,7 +138,7 @@ public sealed class ElfGenerator
 
         // ---- 5. atomar schreiben ---------------------------------------------
         var target = Path.Combine(debugDirectory,
-            Path.GetFileNameWithoutExtension(sourceFileName) + ".elf");
+            Path.GetFileNameWithoutExtension(sourceRelativePath) + ".elf");
 
         WriteAtomically(target, BuildElfHeader(), headers, data);
         return target;
@@ -141,13 +147,13 @@ public sealed class ElfGenerator
     private Die BuildCompileUnit(
         DwarfStringTable strings,
         string projectDirectory,
-        string sourceFileName,
+        string sourceRelativePath,
         IReadOnlyList<SvnrVariable> variables)
     {
         var compileUnit = new Die(DwTag.CompileUnit,
             DieAttribute.StringRef(DwAt.Producer, strings.Offset(Producer)),
             DieAttribute.Data1(DwAt.Language, (byte)DwLang.C99),
-            DieAttribute.StringRef(DwAt.Name, strings.Offset(sourceFileName)),
+            DieAttribute.StringRef(DwAt.Name, strings.Offset(sourceRelativePath)),
             DieAttribute.StringRef(DwAt.CompDir, strings.Offset(projectDirectory)),
             DieAttribute.Address(DwAt.LowPc, 0),
             DieAttribute.Data4(DwAt.HighPc, HighPc),

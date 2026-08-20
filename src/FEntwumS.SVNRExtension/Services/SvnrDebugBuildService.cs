@@ -27,6 +27,15 @@ public sealed class SvnrDebugBuildService
         }
 
         var sourceFileName = Path.GetFileName(assemblerFilePath);
+
+        // Fuer die Debug-Informationen der Pfad relativ zum Projektordner, nicht der blosse
+        // Dateiname. GDB setzt die Quelldatei als DW_AT_comp_dir + Name zusammen; liegt die
+        // .asm in einem Unterordner - und das ist der Normalfall, etwa asm/blink.asm -, zeigt
+        // der blosse Name auf eine Datei, die es dort nicht gibt, und GDB meldet beim Halten
+        // "No such file or directory". Vorwaertsschraegstriche, weil DWARF sie so vorsieht.
+        var sourceRelativePath = Path.GetRelativePath(projectDirectory, assemblerFilePath)
+            .Replace(Path.DirectorySeparatorChar, '/');
+
         var binaryPath = Path.Combine(debugDirectory,
             Path.GetFileNameWithoutExtension(sourceFileName) + ".bin");
 
@@ -36,7 +45,7 @@ public sealed class SvnrDebugBuildService
             debugDirectory,
             ResolveTemplatePath(),
             projectDirectory,
-            sourceFileName,
+            sourceRelativePath,
             SvnrDebugInfo.BuildLineMappings(program.Instructions),
             SvnrDebugInfo.BuildVariables(program.Instructions));
 

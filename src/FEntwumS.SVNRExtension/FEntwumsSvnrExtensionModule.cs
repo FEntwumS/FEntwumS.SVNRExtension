@@ -233,13 +233,13 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                         Target = "win-x64",
                         
                         Url =
-                            "https://github.com/FEntwumSGDB/releases/download/v0.3.0/gdb-windows-x86_64.tar.gz",
+                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.1/gdb-windows-x86_64.zip",
                             //"https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip", //GDB 11.2 --enable-targets=all akzeptiert keine target.xml
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = " bin/gdb-multiarch.exe",
+                                RelativePath = "bin/gdb-multiarch.exe",
                                 SettingKey = GdbPathSetting
                             }
                         ]
@@ -249,7 +249,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                         Target = "linux-x64",
                         Url =
                            //"https://github.com/guyush1/gdb-static/releases/download/v17.1-static/gdb-static-full-x86_64.tar.gz"
-                             "https://github.com/FEntwumS/GDB/releases/download/v0.3.0/gdb-linux-x86_64-py.tar.gz",
+                             "https://github.com/FEntwumS/GDB/releases/download/v0.3.1/gdb-linux-x86_64-py.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
@@ -264,7 +264,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     {
                         Target = "osx-arm64",
                         Url =
-                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.0/gdb-macos-arm64-py.tar.gz",
+                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.1/gdb-macos-arm64-py.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting

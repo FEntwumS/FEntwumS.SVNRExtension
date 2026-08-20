@@ -86,24 +86,24 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         {
             if (x is [IProjectFile { Extension: ".asm" } file])
             {
-                if (file.Root is not UniversalFpgaProjectRoot { Toolchain: "svnr" } universalFpgaProjectRoot)
+                l.Add(new MenuItemModel("AsmConversion")
                 {
-                    l.Add(new MenuItemModel("AsmConversion")
+                    Header = "Convert .asm",
+                    Command = new AsyncRelayCommand(() => asmConverterService.ConvertAsync(file)),
+                });
+
+                // Nicht mehr an der Toolchain festgemacht -> das Registrieren gehoert zum Debuggen,
+                // und das soll auch dann gehen, wenn synthetisiert gerade niemand. Dieselbe
+                // Begruendung wie in SvnrDebugLaunchProvider.CanPrepare. Kriterium ist die
+                // Dateiendung, die oben schon geprueft ist.
+                if (file.Root is UniversalFpgaProjectRoot universalFpgaProjectRoot &&
+                    SvnrSettingsHelper.GetAsmFile(universalFpgaProjectRoot) != file.RelativePath)
+                {
+                    l.Add(new MenuItemModel("RegisterAsm")
                     {
-                        Header = "Convert .asm",
-                        Command = new AsyncRelayCommand(() => asmConverterService.ConvertAsync(file)),
+                        Header = "Use this file to Compile",
+                        Command = new AsyncRelayCommand(() => SvnrSettingsHelper.UpdateProjectAsmFile(file)),
                     });
-                }
-                else
-                {
-                    if (SvnrSettingsHelper.GetAsmFile(universalFpgaProjectRoot) != file.RelativePath)
-                    {
-                        l.Add(new MenuItemModel("RegisterAsm")
-                        {
-                            Header = "Use this file to Compile",
-                            Command = new AsyncRelayCommand(() => SvnrSettingsHelper.UpdateProjectAsmFile(file)),
-                        });
-                    }
                 }
             }
         });

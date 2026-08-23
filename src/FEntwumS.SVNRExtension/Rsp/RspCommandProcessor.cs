@@ -9,7 +9,8 @@ namespace FEntwumS.SVNRExtension.Rsp;
 public sealed class RspCommandProcessor(
     SvnrBootloaderClient client,
     string targetDescription,
-    Func<bool> interruptRequested)
+    Func<bool> interruptRequested,
+    Action<string>? reportFault = null)
 {
     private const string SupportedFeatures =
         "PacketSize=1000;qXfer:features:read+;hwbreak+;swbreak-;multiprocess-";
@@ -30,6 +31,10 @@ public sealed class RspCommandProcessor(
         catch (Exception exception) when (exception is SbdpException or FormatException
                                               or ArgumentException or IndexOutOfRangeException)
         {
+            // GDB bekommt nur E01 - der Grund passt nicht ins Protokoll. Ohne diesen Weg nach
+            // aussen steht in der Debugger Console am Ende "Cannot access memory at address ...",
+            // und was die FPGA wirklich geantwortet hat, weiss niemand.
+            reportFault?.Invoke($"RSP '{command}': {exception.Message}");
             return RspResponse.GenericError;
         }
     }

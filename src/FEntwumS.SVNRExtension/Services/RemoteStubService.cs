@@ -25,6 +25,10 @@ public sealed class RemoteStubService : IDisposable
 
     public Action<bool, string>? TraceRsp { get; set; }
 
+    // Gerufen, wenn ein RSP-Kommando an der Hardware scheitert. GDB bekommt nur E01; der Grund
+    // steht in der Ausnahme und ginge sonst verloren. Laeuft auf dem Sitzungs-Thread.
+    public Action<string>? Fault { get; set; }
+
     public int Start(ISbdpTransport transport, int tcpPort = 0)
     {
         if (IsRunning) throw new InvalidOperationException("Der Stub laeuft bereits.");
@@ -92,6 +96,8 @@ public sealed class RemoteStubService : IDisposable
         {
         }
 
+        RestoreNormalMode();
+
         _transport?.Dispose();
 
         _sessionLoop = null;
@@ -99,6 +105,35 @@ public sealed class RemoteStubService : IDisposable
         _transport = null;
         _client = null;
         Port = 0;
+    }
+
+    // Holt die FSM auf dem FPGA aus dem Debug-Zweig zurueck, bevor die Verbindung faellt.
+    // Bleibt sie dort stehen, meldet die naechste Suche "kein SVNR": Das Board antwortet zwar,
+    // aber mit DebugRunning oder Halted, und dann half bisher nur Aus- und Einstecken.
+    // Bestbemuehen - scheitert es, muss der Port trotzdem frei werden. Diesen Fall faengt
+    // SvnrBootloaderClient.TestCommunication beim naechsten Start ab.
+    private void RestoreNormalMode()
+    {
+        if (_client is not { } client) return;
+
+        // Die Session-Schleife koennte noch am Port haengen, falls sie oben nicht rechtzeitig
+        // aufgehoert hat -> ohne die Sperre nicht dazwischenfunken.
+        if (!_serialGate.TryEnter(LoadProgramLockTimeoutMilliseconds)) return;
+
+        try
+        {
+            client.DebugReset();
+            client.SwitchToPowerOn();
+        }
+        catch (Exception)
+        {
+            // Siehe oben: Ein Board, das hier nicht mehr antwortet, ist mit einem weiteren
+            // Paket nicht zu retten.
+        }
+        finally
+        {
+            _serialGate.Exit();
+        }
     }
 
     public void Dispose()
@@ -135,7 +170,8 @@ public sealed class RemoteStubService : IDisposable
     private void RunSession(NetworkStream networkStream, CancellationToken token)
     {
         var stream = new RspStream(networkStream) { Trace = TraceRsp };
-        var processor = new RspCommandProcessor(_client!, _targetDescription, stream.TryConsumeInterrupt);
+        var processor = new RspCommandProcessor(_client!, _targetDescription, stream.TryConsumeInterrupt,
+            Fault);
 
         while (!token.IsCancellationRequested)
         {

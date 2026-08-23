@@ -29,6 +29,16 @@ public sealed class SvnrBootloaderClient(ISbdpTransport transport)
     /// <summary>Wartezeit nach einem Einzelschritt, bevor der Zustand abgefragt wird.</summary>
     private static readonly TimeSpan StepSettleTime = TimeSpan.FromMilliseconds(1);
 
+    /// <summary>Wartezeit nach dem Setzen oder Loeschen eines Breakpoints (H-4).</summary>
+    /// <remarks>
+    /// <c>decoder.vhd:437-449</c>: Trifft die Statusabfrage ein, waehrend <c>z_ADDING_BP</c> noch
+    /// auf <c>i_bp_edit_done</c> wartet, kommt <see cref="SvnrError.NoSpace" /> zurueck - obwohl
+    /// <c>z_ADD</c> den Breakpoint da laengst in die Tabelle geschrieben hat
+    /// (<c>breakpoint_controller.vhd:104-107</c>). Belegt am 23.08.2026 durch eine Mitschrift:
+    /// GDB schickte <c>Z0,41,2</c>, der Stub antwortete <c>E01</c>.
+    /// </remarks>
+    private static readonly TimeSpan BreakpointSettleTime = TimeSpan.FromMilliseconds(1);
+
     /// <summary>
     /// Wird fuer jeden gesendeten und empfangenen Rahmen gerufen - <c>true</c> heisst zum FPGA.
     /// </summary>
@@ -65,7 +75,9 @@ public sealed class SvnrBootloaderClient(ISbdpTransport transport)
     /// </summary>
     /// <remarks>
     /// Laeuft das Programm gerade, wird zurueckgesetzt - sonst liesse sich eine Verbindung, die
-    /// beim letzten Mal nicht sauber beendet wurde, nie wieder aufnehmen.
+    /// beim letzten Mal nicht sauber beendet wurde, nie wieder aufnehmen. Dasselbe gilt fuer die
+    /// Zustaende des Debug-Zweigs: Ein Board, das dort steht, antwortet einwandfrei, nur eben
+    /// mit einem Zustand, den eine vorige Sitzung hinterlassen hat.
     /// </remarks>
     public bool TestCommunication()
     {
@@ -79,6 +91,14 @@ public sealed class SvnrBootloaderClient(ISbdpTransport transport)
                 return true;
             case SvnrState.Running:
                 ResetNormal();
+                return true;
+            case SvnrState.DebugRunning:
+            case SvnrState.Halted:
+                // Zuruecksetzen statt verwerfen -> danach steht das Board wie frisch
+                // eingesteckt, und der Start laeuft dieselbe Folge wie immer. Ohne das half
+                // hier nur Aus- und Einstecken.
+                DebugReset();
+                SwitchToPowerOn();
                 return true;
             default:
                 return false;
@@ -261,9 +281,10 @@ public sealed class SvnrBootloaderClient(ISbdpTransport transport)
         RequireAddress(address);
         Send(new SbdpPacket(SbdpType.AddBreakpoint, address));
 
-        // Kein Sleep davor: Die Laufzeit der drei Bytes des Statuskommandos (rund 260 us bei
-        // 115200) deckt das Rennen mit i_bp_edit_done zu (H-4). Wer hier "optimiert" und schneller
-        // fragt, bekommt den Fehlercode aus z_ADDING_BP statt BreakpointAdded.
+        // Die Annahme, die Laufzeit der drei Bytes des Statuskommandos (rund 260 us bei 115200)
+        // decke das Rennen mit i_bp_edit_done zu, hat sich nicht gehalten -> wie beim
+        // Einzelschritt erst warten, dann fragen.
+        Thread.Sleep(BreakpointSettleTime);
         RequireState($"Breakpoint bei 0x{address:x3} setzen", SvnrState.BreakpointAdded);
     }
 
@@ -271,6 +292,9 @@ public sealed class SvnrBootloaderClient(ISbdpTransport transport)
     {
         RequireAddress(address);
         Send(new SbdpPacket(SbdpType.DeleteBreakpoint, address));
+
+        // Dasselbe Rennen wie beim Setzen, nur ueber z_DELETING_BP (decoder.vhd:451-463).
+        Thread.Sleep(BreakpointSettleTime);
         RequireState($"Breakpoint bei 0x{address:x3} loeschen", SvnrState.BreakpointDeleted);
     }
 

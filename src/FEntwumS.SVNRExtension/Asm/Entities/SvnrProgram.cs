@@ -3,7 +3,7 @@ using FEntwumS.SVNRExtension.Sbdp.Constants;
 namespace FEntwumS.SVNRExtension.Asm.Entities;
 
 public sealed record SvnrProgram(
-    IReadOnlyList<ushort> Words,
+    IReadOnlyList<ushort> Words, //liste aus 16bit einträge
     IReadOnlyList<AssembledInstruction> Instructions,
     IReadOnlyList<AssemblyDiagnostic> Diagnostics)
 {

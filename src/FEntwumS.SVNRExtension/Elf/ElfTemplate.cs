@@ -20,7 +20,6 @@ internal sealed class ElfTemplate
 {
     public const int ElfHeaderSize = 52;
     public const int SectionHeaderSize = 40;
-
     private const int EShoffOffset = 32;
     private const int EShentsizeOffset = 46;
     private const int EShnumOffset = 48;

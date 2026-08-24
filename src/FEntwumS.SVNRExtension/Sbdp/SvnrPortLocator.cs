@@ -42,7 +42,7 @@ public static class SvnrPortLocator
         }
 
         throw new IOException(
-            $"Auf keiner der {candidates.Count} Schnittstellen hat ein SVNR geantwortet. " +
-            "Der Port laesst sich unter Tools -> SVNR fest eintragen.");
+            $"No SVNR responded on any of the {candidates.Count} candidate port(s). " +
+            "If a previous debug session was not cleanly terminated, unplug and replug the Icedurino.");
     }
 }

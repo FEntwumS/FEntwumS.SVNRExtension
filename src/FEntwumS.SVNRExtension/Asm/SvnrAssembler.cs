@@ -78,8 +78,9 @@ public static partial class SvnrAssembler
 
         var operand = Convert.ToByte(match.Groups["operand"].Value, 16);
 
-        return new AssembledInstruction(sourceLine, address, mnemonic, operand,
-            (ushort)((opcode << 8) | operand), comment);
+        var machineInstruction = (ushort)((opcode << 8) | operand);
+
+        return new AssembledInstruction(sourceLine, address, mnemonic, operand, machineInstruction, comment);
     }
 
     // Die Datenvariante steht bewusst vor der Befehlsvariante. Andersherum verschluckt

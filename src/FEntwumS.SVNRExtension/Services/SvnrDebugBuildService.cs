@@ -57,10 +57,7 @@ public sealed class SvnrDebugBuildService
         var directory = Path.GetDirectoryName(typeof(SvnrDebugBuildService).Assembly.Location)!;
         var path = Path.Combine(directory, "Assets", TemplateFile);
 
-        if (!File.Exists(path))
-            throw new FileNotFoundException($"Die ELF-Vorlage fehlt: {path}", path);
-
-        return path;
+        return !File.Exists(path) ? throw new FileNotFoundException($"No ELF-Template-File found: {path}", path) : path;
     }
 
     private static void WriteAtomically(string target, byte[] content)

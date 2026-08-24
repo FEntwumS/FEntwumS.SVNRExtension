@@ -10,6 +10,6 @@ public readonly record struct AssemblyDiagnostic(AssemblySeverity Severity, int 
 {
     public override string ToString()
     {
-        return $"{Severity} (Zeile {SourceLine}): {Message}";
+        return $"{Severity} (Line {SourceLine}): {Message}"; 
     }
 }

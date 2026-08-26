@@ -18,17 +18,16 @@ public void FillTemplate(UniversalFpgaProjectRoot root)
     {
         var name = root.Header.Replace(" ", "");
         TemplateHelper.CopyDirectoryAndReplaceString(path, root.FullPath, ("%PROJECTNAME%", name));
-        //var file = root.AddFile(name + ".vhd");
+        var topEntity = root.AddFile("top" + ".vhd");
+        var asmFile = root.AddFile(Path.Combine("asm", "LED_Example.asm"));
 
-        //root.TopEntity = name;
+        root.TopEntity = "top.vhd";
         root.Properties.SetString("vhdlStandard", "93c");
-
-        //var file2 = root.AddFile(name + "_tb.vhd");
-
-        //root.AddTestBench(file2.RelativePath);
-
-        //_ = mainDockService.OpenFileAsync(file.FullPath);
-        //_ = mainDockService.OpenFileAsync(file2.FullPath);
+        root.Properties.AddToStringArray("Include","*.asm");
+        root.Properties.SetString("DebugKit", "SVNR");
+        
+        _ = mainDockService.OpenFileAsync(topEntity.FullPath);
+        _ = mainDockService.OpenFileAsync(asmFile.FullPath);
     }
     catch (Exception e)
     {

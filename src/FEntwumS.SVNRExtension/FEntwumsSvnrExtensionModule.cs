@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
+using FEntwumS.SVNRExtension.Templates;
 using FEntwumS.SVNRExtension.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -111,6 +112,8 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                 x.Icon?.RemoveOverlay("ConstraintFile");
             }
         });
+        fpgaService.RegisterTemplate<SvnrTemplate>();
+
     }
 
     public static readonly Package GdbPackage = new()

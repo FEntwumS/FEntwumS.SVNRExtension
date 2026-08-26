@@ -4,6 +4,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
 using FEntwumS.SVNRExtension.Services;
+using FEntwumS.SVNRExtension.Templates;
 using FEntwumS.SVNRExtension.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -43,9 +44,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 
     public override void RegisterServices(IServiceCollection services)
     {
-        services.AddSingleton<AsmConverterService>();
-        services.AddSingleton<SvnrToolchainService>();
-
         services.AddSingleton<SvnrDebugBuildService>();
         services.AddSingleton<RemoteStubService>();
         services.AddSingleton<SvnrDebugLaunchProvider>();
@@ -53,9 +51,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
 
     public override void Initialize(IServiceProvider serviceProvider)
     {
-        var asmConverterService = serviceProvider.Resolve<AsmConverterService>();
         var projectExplorerService = serviceProvider.Resolve<IProjectExplorerService>();
-        var windowService = serviceProvider.Resolve<IWindowService>();
         var fpgaService = serviceProvider.Resolve<FpgaService>();
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         serviceProvider.Resolve<IPackageService>().RegisterPackage(GdbPackage);
@@ -71,7 +67,6 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         // bringt dafuer keinen eigenen Knopf mit, sondern nur den Vorbereiter, den der Kern fragt.
         serviceProvider.Resolve<IDebuggerService>().RegisterLaunchProvider<SvnrDebugLaunchProvider>();
 
-        serviceProvider.Resolve<FpgaService>().RegisterToolchain<SvnrToolchain>();
 
         fpgaService.RegisterLanguage("ASM", SupportedExtensions);
         var languageManager = serviceProvider.Resolve<ILanguageManager>();
@@ -103,82 +98,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                 }
             }
         });
-
-
-        windowService.RegisterUiExtension("UniversalFpgaToolBar_CompileMenuExtension",
-            new OneWareUiExtension(x =>
-            {
-                if (x is not UniversalFpgaProjectRoot { Toolchain: "svnr" } root) return null;
-
-                var name = root.Properties["Fpga"]?.ToString();
-                var fpgaPackage = fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == name);
-                var fpga = fpgaPackage?.LoadFpga();
-                var svnrToolchainService = serviceProvider.Resolve<SvnrToolchainService>();
-
-                return new StackPanel()
-                {
-                    Orientation = Orientation.Vertical,
-                    Children =
-                    {
-                        new MenuItem()
-                        {
-                            Header = "Run Synthesis",
-                            Command = new AsyncRelayCommand(
-                                async () => { await svnrToolchainService.SynthAsync(root, new FpgaModel(fpga!)); },
-                                () => fpga != null)
-                        },
-                        new MenuItem()
-                        {
-                            Header = "Run Fit",
-                            Command = new AsyncRelayCommand(
-                                async () => { await svnrToolchainService.FitAsync(root, new FpgaModel(fpga!)); },
-                                () => fpga != null)
-                        },
-                        new MenuItem()
-                        {
-                            Header = "Run Assemble",
-                            Command = new AsyncRelayCommand(
-                                async () => { await svnrToolchainService.AssembleAsync(root, new FpgaModel(fpga!)); },
-                                () => fpga != null)
-                        },
-                        new Separator(),
-                        new MenuItem()
-                        {
-                            Header = "Yosys Settings",
-                            Icon = new Image()
-                            {
-                                Source = Application.Current!.FindResource(
-                                    Application.Current!.RequestedThemeVariant,
-                                    "Material.SettingsOutline") as IImage
-                            },
-                            Command = new AsyncRelayCommand(async () =>
-                            {
-                                if (projectExplorerService
-                                        .ActiveProject is UniversalFpgaProjectRoot fpgaProjectRoot)
-                                {
-                                    var selectedFpga = root.Properties["Fpga"]?.ToString();
-                                    var selectedFpgaPackage =
-                                        fpgaService.FpgaPackages.FirstOrDefault(obj => obj.Name == selectedFpga);
-
-                                    if (selectedFpgaPackage == null)
-                                    {
-                                        serviceProvider.Resolve<ILogger>()
-                                            .Warning("No FPGA Selected. Open Pin Planner first!");
-                                        return;
-                                    }
-
-                                    await windowService.ShowDialogAsync(
-                                        new YosysCompileSettingsView
-                                        {
-                                            DataContext = new YosysCompileSettingsViewModel(fpgaProjectRoot,
-                                                selectedFpgaPackage.LoadFpga())
-                                        });
-                                }
-                            })
-                        }
-                    }
-                };
-            }));
+        
         fpgaService.RegisterProjectEntryModification(x =>
         {
             if (x.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot) return;
@@ -192,6 +112,8 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                 x.Icon?.RemoveOverlay("ConstraintFile");
             }
         });
+        fpgaService.RegisterTemplate<SvnrTemplate>();
+
     }
 
     public static readonly Package GdbPackage = new()

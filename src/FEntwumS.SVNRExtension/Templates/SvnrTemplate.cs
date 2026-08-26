@@ -12,7 +12,7 @@ public string Name => "Base SVNR for .asm programming";
 
 public void FillTemplate(UniversalFpgaProjectRoot root)
 {
-    var path = Path.Combine(paths.PluginsDirectory, "FEntwumS.SVNRExtention", "src", "Assets", "SVNR");
+    var path = Path.Combine(paths.PluginsDirectory, "FEntwumS.SVNRExtention", "Assets", "SVNR");
 
     try
     {

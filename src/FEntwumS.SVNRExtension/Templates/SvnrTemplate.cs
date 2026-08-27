@@ -6,13 +6,15 @@ using OneWare.UniversalFpgaProjectSystem.Services;
 
 namespace FEntwumS.SVNRExtension.Templates;
 
-public class SvnrTemplate(ILogger logger, IMainDockService mainDockService, IPaths paths) : IFpgaProjectTemplate
+public class SvnrTemplate(ILogger logger, IMainDockService mainDockService) : IFpgaProjectTemplate
 {
 public string Name => "Base SVNR for .asm programming";
 
 public void FillTemplate(UniversalFpgaProjectRoot root)
 {
-    var path = Path.Combine(paths.PluginsDirectory, "FEntwumS.SVNRExtension", "Assets", "Templates", "SVNR");
+    // Assets liegen neben der DLL -> im Dev-Lauf im Session-Ordner, installiert unter Packages/Plugins
+    var directory = Path.GetDirectoryName(typeof(SvnrTemplate).Assembly.Location)!;
+    var path = Path.Combine(directory, "Assets", "Templates", "SVNR");
 
     try
     {

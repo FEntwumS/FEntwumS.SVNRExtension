@@ -6,6 +6,7 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 namespace FEntwumS.SVNRExtension.Tools;
 
 public class SvnrSettingsHelper
+//TODO auf fehlende Toolchain anpassen
 {
     public static Task UpdateProjectAsmFile(IProjectFile file)
     // Hier soll der Grüne Harken in der UI gesetzt werden + die Datei als Quelle für Asssemblierung und Debugging genommen werden

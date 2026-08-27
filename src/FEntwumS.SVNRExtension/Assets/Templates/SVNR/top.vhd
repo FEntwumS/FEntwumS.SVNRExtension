@@ -25,7 +25,8 @@ entity top is
 	port (
 		clk 		: in std_logic;
 		rxd   		: in std_logic;
-		txd			: out std_logic
+		txd			: out std_logic;
+		led         : out std_logic_vector(7 downto 0)
 	);
 end top;
 
@@ -56,6 +57,7 @@ architecture ARCH of top is
             clk             => clk,
             ws2812_out      => s_ws2812_out,
             btn             => s_btn,
+			led             => led,
             sw              => s_sw,
             zehner          => s_zehner,
             einer           => s_einer,

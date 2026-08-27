@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using FEntwumS.SVNRExtension.Rsp;
 using FEntwumS.SVNRExtension.Sbdp;
+using FEntwumS.SVNRExtension.Sbdp.Constants;
 
 namespace FEntwumS.SVNRExtension.Services;
 
@@ -122,6 +123,12 @@ public sealed class RemoteStubService : IDisposable
 
         try
         {
+            // z_DEBUG_RUNNING akzeptiert nur RequestState und Halt - ein Reset-Kommando wird
+            // dort ignoriert. Deshalb erst den Zustand pruefen und ggf. anhalten.
+            var received = client.RequestState();
+            if (received is { Type: SbdpType.Status, State: SvnrState.DebugRunning })
+                client.Halt();
+
             client.DebugReset();
             client.SwitchToPowerOn();
         }
@@ -170,7 +177,8 @@ public sealed class RemoteStubService : IDisposable
     private void RunSession(NetworkStream networkStream, CancellationToken token)
     {
         var stream = new RspStream(networkStream) { Trace = TraceRsp };
-        var processor = new RspCommandProcessor(_client!, _targetDescription, stream.TryConsumeInterrupt,
+        var processor = new RspCommandProcessor(_client!, _targetDescription,
+            () => token.IsCancellationRequested || stream.TryConsumeInterrupt(),
             Fault);
 
         while (!token.IsCancellationRequested)

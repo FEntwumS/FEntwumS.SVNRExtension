@@ -94,6 +94,6 @@ public static partial class SvnrAssembler
     // zurueck, weil nach den vier Zeichen "DEC0" noch eine "0" uebrig bliebe. ADD und DEC
     // sind die einzigen Mnemoniken, die ausschliesslich aus Hexbuchstaben bestehen.
     [GeneratedRegex(
-        @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?:(?<data>[0-9A-Fa-f]{4})|(?<opcode>[A-Za-z]{2,4})\s*(?<operand>[0-9A-Fa-f]{2}))\s*(?:;\s*(?<comment>.*))?$")]
+        @"^(?<address>[0-9A-Fa-f]{1,4}):\s*(?:(?<data>[0-9A-Fa-f]{4})|(?<opcode>[A-Za-z]{2,4})\s*(?<operand>[0-9A-Fa-f]{2}))\s*(?:[;#]\s*(?<comment>.*))?$")]
     private static partial Regex LinePattern();
 }

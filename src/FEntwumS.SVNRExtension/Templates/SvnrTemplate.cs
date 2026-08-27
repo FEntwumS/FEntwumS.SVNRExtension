@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FEntwumS.SVNRExtension.Tools;
+using Microsoft.Extensions.Logging;
 using OneWare.Essentials.Services;
 using OneWare.UniversalFpgaProjectSystem.Helpers;
 using OneWare.UniversalFpgaProjectSystem.Models;
@@ -26,7 +27,7 @@ public void FillTemplate(UniversalFpgaProjectRoot root)
         root.TopEntity = "top.vhd";
         root.Properties.SetString("vhdlStandard", "93c");
         root.Properties.AddToStringArray("Include","*.asm");
-        root.Properties.SetString("DebugKit", "SVNR");
+        root.Properties.SetString(SvnrSettingsHelper.DebugKitProperty, SvnrSettingsHelper.DebugKitValue);
         
         _ = mainDockService.OpenFileAsync(topEntity.FullPath);
         _ = mainDockService.OpenFileAsync(asmFile.FullPath);

@@ -44,9 +44,9 @@ public sealed class SvnrDebugLaunchProvider : IDebugLaunchProvider
         _projectExplorerService.ActiveProject as UniversalFpgaProjectRoot;
 
    
-    public bool CanPrepare() // Bewusst nicht an der aktiven Toolchain festgemacht 
+    public bool CanPrepare()
     {
-        return ActiveSvnrProject is { } project && SvnrSettingsHelper.GetAsmFile(project) != "none";
+        return ActiveSvnrProject is { } project && SvnrSettingsHelper.IsSvnrKit(project);
     }
 
     // Wenn man den über den Käfer den Workflow anstößt, wir erstmal die Async Methode zur Vorbereitung des Stubs angestoßen.

@@ -6,8 +6,17 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 namespace FEntwumS.SVNRExtension.Tools;
 
 public class SvnrSettingsHelper
-//TODO auf fehlende Toolchain anpassen
 {
+    
+    public const string DebugKitProperty = "DebugKit";
+    public const string DebugKitValue = "SVNR";
+    
+    public static bool IsSvnrKit(UniversalFpgaProjectRoot project)
+    {
+        return string.Equals(project.Properties.GetString(DebugKitProperty), DebugKitValue,
+            StringComparison.OrdinalIgnoreCase);
+    }
+    
     public static Task UpdateProjectAsmFile(IProjectFile file)
     // Hier soll der Grüne Harken in der UI gesetzt werden + die Datei als Quelle für Asssemblierung und Debugging genommen werden
     {

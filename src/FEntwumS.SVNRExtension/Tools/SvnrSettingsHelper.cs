@@ -29,12 +29,7 @@ public class SvnrSettingsHelper
         return project.Properties.GetString("SVNR/AsmFile") ?? "none";
     }
 
-    public static bool IsSvnrToolchainActive(UniversalFpgaProjectRoot project)
-    {
-        return project.Properties.GetString("Toolchain") == "svnr";
-    }
-    
-    public static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? asmFile)
+    private static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? asmFile)
     {
         var include = project.Properties.GetStringArray("include");
         var hasAsmInclude = false;

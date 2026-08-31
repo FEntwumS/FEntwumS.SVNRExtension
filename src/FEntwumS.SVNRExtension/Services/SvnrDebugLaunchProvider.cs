@@ -13,7 +13,9 @@ namespace FEntwumS.SVNRExtension.Services;
 
 public sealed class SvnrDebugLaunchProvider : IDebugLaunchProvider
 {
-    public const string GdbAdapterId = "gdb";
+    private const string GdbAdapterId = "gdb";
+    
+    public string DisplayName => "SVNR (on-chip)";
 
     private readonly SvnrDebugBuildService _buildService;
     private readonly RemoteStubService _stubService;
@@ -38,7 +40,7 @@ public sealed class SvnrDebugLaunchProvider : IDebugLaunchProvider
         _logger = logger;
     }
 
-    public string DisplayName => "SVNR (on-chip)";
+ 
 
     private UniversalFpgaProjectRoot? ActiveSvnrProject =>
         _projectExplorerService.ActiveProject as UniversalFpgaProjectRoot;
@@ -149,7 +151,8 @@ public sealed class SvnrDebugLaunchProvider : IDebugLaunchProvider
         [
             "set architecture m68k",
             $"set tdesc filename {ToGdbPath(RemoteStubService.TargetDescriptionPath())}",
-            $"symbol-file {ToGdbPath(elfPath)}"
+            $"symbol-file {ToGdbPath(elfPath)}",
+            "set tcp connect-timeout 5"
         ];
 
         File.WriteAllText(Path.ChangeExtension(elfPath, ".gdbinit"),

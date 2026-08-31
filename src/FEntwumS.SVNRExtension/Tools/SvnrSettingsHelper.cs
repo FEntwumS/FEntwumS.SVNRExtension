@@ -35,7 +35,14 @@ public class SvnrSettingsHelper
     
     public static string GetAsmFile(UniversalFpgaProjectRoot project)
     {
-        return project.Properties.GetString("SVNR/AsmFile") ?? "none";
+        var stored = project.Properties.GetString("SVNR/AsmFile");
+        if (string.IsNullOrEmpty(stored)) return "none";
+
+        // Der Wert kann auf einem anderen System in die Projektdatei geschrieben worden sein
+        // -> auf das Trennzeichen dieses Systems bringen. Sonst ist "asm\wave.asm" unter macOS
+        // ein Dateiname statt eines Pfades, und Path.Combine sucht eine Datei, die es nicht gibt.
+        return stored.Replace('\\', Path.DirectorySeparatorChar)
+            .Replace('/', Path.DirectorySeparatorChar);
     }
 
     private static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? asmFile)
@@ -57,6 +64,8 @@ public class SvnrSettingsHelper
         if (!hasAsmInclude)
             project.Properties.AddToStringArray("include", "*.asm");
 
-        project.Properties.SetString("SVNR/AsmFile", asmFile);
+        // In der Projektdatei steht immer der Schraegstrich -> sie wandert zwischen Systemen,
+        // und file.RelativePath bringt das Trennzeichen der gerade laufenden Plattform mit.
+        project.Properties.SetString("SVNR/AsmFile", asmFile?.Replace('\\', '/'));
     }
 }

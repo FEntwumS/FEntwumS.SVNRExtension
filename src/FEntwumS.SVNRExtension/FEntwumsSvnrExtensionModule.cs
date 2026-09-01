@@ -55,9 +55,9 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         var fpgaService = serviceProvider.Resolve<FpgaService>();
         var settingsService = serviceProvider.Resolve<ISettingsService>();
         serviceProvider.Resolve<IPackageService>().RegisterPackage(GdbPackage);
-
-        settingsService.RegisterSetting("Tools", "SVNR", SerialPortSetting,
-            new TextBoxSetting("Serial Port", string.Empty,
+        
+        settingsService.RegisterSetting("Tools", "Debugger", SerialPortSetting,
+            new TextBoxSetting("SVNR Serial Port", string.Empty,
                 "z. B. /dev/ttyUSB0, /dev/cu.usbserial-1420 oder COM3")
             {
                 HoverDescription = "Serial port of the SVNR board. Leave empty to probe all ports."

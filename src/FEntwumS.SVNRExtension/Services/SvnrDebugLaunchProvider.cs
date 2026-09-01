@@ -152,7 +152,7 @@ public sealed class SvnrDebugLaunchProvider : IDebugLaunchProvider
             "set architecture m68k",
             $"set tdesc filename {ToGdbPath(RemoteStubService.TargetDescriptionPath())}",
             $"symbol-file {ToGdbPath(elfPath)}",
-            "set tcp connect-timeout 5"
+            "set tcp connect-timeout 5" // vielleicht wieder raus
         ];
 
         File.WriteAllText(Path.ChangeExtension(elfPath, ".gdbinit"),

@@ -20,8 +20,6 @@ public sealed class RspCommandProcessor(
 
     private static readonly TimeSpan RunPollInterval = TimeSpan.FromMilliseconds(300);
 
-    private bool _attachContinuePending = true;
-
     public string Process(string command)
     {
         try
@@ -65,12 +63,6 @@ public sealed class RspCommandProcessor(
 
     private string ContinueExecution()
     {
-        if (_attachContinuePending)
-        {
-            _attachContinuePending = false;
-            return RspResponse.TrapSignal;
-        }
-
         client.DebugRun();
 
         while (true)

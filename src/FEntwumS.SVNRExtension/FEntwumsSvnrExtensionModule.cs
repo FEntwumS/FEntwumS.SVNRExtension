@@ -31,12 +31,12 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
     ///     veroeffentlicht <c>OneWare.Debugger</c> nicht als NuGet-Paket, deshalb laesst sich die
     ///     Konstante von hier aus nicht referenzieren - dieselbe Kopplung ueber einen blossen String
     ///     wie beim GDB-Pfad. Aendert der Kern den Schluessel, faellt das erst zur Laufzeit auf.
-    public const string RemoteEndpointSetting = "FEntwumS_Debugger_RemoteEndpoint";
+    public const string RemoteEndpointSetting = "Debugger_RemoteEndpoint";
 
-    private const string GdbPathSetting = "FEntwumS_Debugger_GdbPath";
+    private const string GdbPathSetting = "Debugger_GdbPath";
 
     ///     Serielle Schnittstelle zum SVNR. Leer heisst: selbst suchen.
-    public const string SerialPortSetting = "FEntwumS_Svnr_SerialPort";
+    public const string SerialPortSetting = "Svnr_SerialPort";
 
 
     public override IReadOnlyCollection<string> Dependencies

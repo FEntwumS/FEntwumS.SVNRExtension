@@ -85,7 +85,7 @@ public sealed class RspCommandProcessor(
     private string HaltTarget()
     {
         client.Halt();
-        return RspResponse.TrapSignal;
+        return RspResponse.InterruptSignal;
     }
 
     private string SetBreakpoint(string command)

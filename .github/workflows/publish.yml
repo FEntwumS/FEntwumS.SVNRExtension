@@ -50,9 +50,14 @@ jobs:
 
           sed -i "s:<Version>$CURRENT</Version>:<Version>$NEXT</Version>:" "$CSPROJ"
 
-          # Neue Version an den Anfang der Liste, damit sie im Extension Manager oben steht.
+          # Neue Version ans ENDE der Liste. OneWare bestimmt die neueste ueber die Position im
+          # Array, nicht ueber die Versionsnummer: PackageService.UpdateStatus und ResolveVersion
+          # nehmen LastOrDefault(), der Updater .Last(). Stand die neue Version vorne, hielt der
+          # Extension Manager die aelteste fuer die aktuellste - dann erscheint nie ein
+          # Update-Knopf, und "Update All" wuerde downgraden. Die Anzeige ist davon unberuehrt,
+          # das Auswahlfeld sortiert selbst nach Versionsnummer.
           jq --arg v "$NEXT" \
-            '.versions = ([{version: $v, targets: [{target: "all"}]}] + .versions)' \
+            '.versions = (.versions + [{version: $v, targets: [{target: "all"}]}])' \
             "$JSON" > "$JSON.tmp"
           mv "$JSON.tmp" "$JSON"
 

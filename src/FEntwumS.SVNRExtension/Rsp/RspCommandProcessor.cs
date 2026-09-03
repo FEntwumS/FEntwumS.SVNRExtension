@@ -18,7 +18,7 @@ public sealed class RspCommandProcessor(
     private const string TargetDescriptionPrefix = "qXfer:features:read:";
     private const int BytesPerWord = 2;
 
-    private static readonly TimeSpan RunPollInterval = TimeSpan.FromMilliseconds(300);
+    private static readonly TimeSpan RunPollInterval = TimeSpan.FromMilliseconds(50);
 
     public string Process(string command)
     {

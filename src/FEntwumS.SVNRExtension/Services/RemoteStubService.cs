@@ -3,12 +3,12 @@ using System.Net.Sockets;
 using FEntwumS.SVNRExtension.Rsp;
 using FEntwumS.SVNRExtension.Sbdp;
 using FEntwumS.SVNRExtension.Sbdp.Constants;
+using FEntwumS.SVNRExtension.Tools;
 
 namespace FEntwumS.SVNRExtension.Services;
 
 public sealed class RemoteStubService : IDisposable
 {
-    private const string TargetDescriptionFile = "target.xml";
     private const int LoadProgramLockTimeoutMilliseconds = 500;
 
     private readonly Lock _serialGate = new();
@@ -20,7 +20,7 @@ public sealed class RemoteStubService : IDisposable
     private Task? _sessionLoop;
     private string _targetDescription = string.Empty;
 
-    public int Port { get; private set; }
+    private int Port { get; set; }
 
     public bool IsRunning => _sessionLoop is { IsCompleted: false };
 
@@ -213,24 +213,9 @@ public sealed class RemoteStubService : IDisposable
         }
     }
 
-    /// <summary>
-    /// Pfad der Zielbeschreibung neben der Erweiterung.
-    /// </summary>
-    /// <remarks>
-    /// Der Stub liefert ihren Inhalt auf Anfrage ueber <c>qXfer:features:read</c> aus. GDB
-    /// braucht die Registeraufteilung aber schon, bevor es das erste <c>g</c>-Paket liest,
-    /// deshalb verweist die Kommandodatei des Programms zusaetzlich auf diese Datei.
-    /// </remarks>
-    public static string TargetDescriptionPath()
-    {
-        var directory = Path.GetDirectoryName(typeof(RemoteStubService).Assembly.Location)!;
-
-        return Path.Combine(directory, "Assets", TargetDescriptionFile);
-    }
-
     private static string ReadTargetDescription()
     {
-        var path = TargetDescriptionPath();
+        var path = AccessAssetsUtil.TargetDescriptionPath();
         return !File.Exists(path) ? throw new FileNotFoundException($"Target Description missing: {path}", path) : File.ReadAllText(path);
     }
 }

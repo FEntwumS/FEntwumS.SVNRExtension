@@ -1,6 +1,7 @@
 using FEntwumS.SVNRExtension.Asm;
 using FEntwumS.SVNRExtension.Asm.Entities;
 using FEntwumS.SVNRExtension.Elf;
+using FEntwumS.SVNRExtension.Tools;
 
 namespace FEntwumS.SVNRExtension.Services;
 
@@ -11,7 +12,6 @@ public sealed record SvnrDebugArtifacts(
 
 public sealed class SvnrDebugBuildService
 {
-    private const string TemplateFile = "template.o";
     private const string DebugDirectoryName = "debug";
     private const string BuildDirectoryName = "build";
 
@@ -54,8 +54,7 @@ public sealed class SvnrDebugBuildService
 
     private static string ResolveTemplatePath()
     {
-        var directory = Path.GetDirectoryName(typeof(SvnrDebugBuildService).Assembly.Location)!;
-        var path = Path.Combine(directory, "Assets", TemplateFile);
+        var path = AccessAssetsUtil.ElfTemplatePath();
 
         return !File.Exists(path) ? throw new FileNotFoundException($"No ELF-Template-File found: {path}", path) : path;
     }

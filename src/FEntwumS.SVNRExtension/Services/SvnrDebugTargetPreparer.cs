@@ -14,37 +14,21 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace FEntwumS.SVNRExtension.Services;
 
-public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
+public sealed class SvnrDebugTargetPreparer(
+    SvnrDebugBuildService buildService,
+    RemoteStubService stubService,
+    ISettingsService settingsService,
+    IProjectExplorerService projectExplorerService,
+    IOutputService outputService,
+    ILogger logger)
+    : IDebugTargetPreparer
 {
     private const string GdbBackendId = "gdb_server";
     
     public string DisplayName => "SVNRDebugPreparer";
-    
 
-    private readonly SvnrDebugBuildService _buildService;
-    private readonly RemoteStubService _stubService;
-    private readonly ISettingsService _settingsService;
-    private readonly IProjectExplorerService _projectExplorerService;
-    private readonly IOutputService _outputService;
-    private readonly ILogger _logger;
 
-    public SvnrDebugTargetPreparer(
-        SvnrDebugBuildService buildService,
-        RemoteStubService stubService,
-        ISettingsService settingsService,
-        IProjectExplorerService projectExplorerService,
-        IOutputService outputService,
-        ILogger logger)
-    {
-        _buildService = buildService;
-        _stubService = stubService;
-        _settingsService = settingsService;
-        _projectExplorerService = projectExplorerService;
-        _outputService = outputService;
-        _logger = logger;
-    }
-
-    private UniversalFpgaProjectRoot? ActiveProject => _projectExplorerService.ActiveProject as UniversalFpgaProjectRoot;
+    private UniversalFpgaProjectRoot? ActiveProject => projectExplorerService.ActiveProject as UniversalFpgaProjectRoot;
    
     //Wenn aktives Projekt UniveralFpga und DebugKit = SVNR in JSON
     public bool CanPrepare() { return ActiveProject is { } project && SvnrSettingsHelper.IsSvnrKit(project); }
@@ -54,7 +38,7 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
     {
         if (ActiveProject is not { } project) // Checken ob man in einem FPGA Projekt ist. 
         {
-            _outputService.WriteLine("No FPGA project is active.", Brushes.Red);
+            outputService.WriteLine("No FPGA project is active.", Brushes.Red);
             return null;
         }
 
@@ -62,7 +46,7 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
         
         if (assemblerFile == "none") // Wenn keine Assemblerdatei 
         {
-            _outputService.WriteLine(
+            outputService.WriteLine(
                 "No *.asm-File registered to compile. Choose File in project Tree and call 'Use this file to Compile'.", Brushes.Red);
             return null;
         }
@@ -73,10 +57,10 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
         // dem Assemblieren und vor dem Oeffnen der seriellen Schnittstelle geprueft: ein
         // Tippfehler soll nicht erst auffallen, wenn der COM-Port bereits belegt ist.
         if (!TryReadConfiguredPort(
-                _settingsService.GetSettingValue<string>(FEntwumsSvnrExtensionModule.RemoteEndpointSetting),
+                settingsService.GetSettingValue<string>(FEntwumsSvnrExtensionModule.RemoteEndpointSetting),
                 out var configuredPort, out var rejection))
         {
-            _outputService.WriteLine(rejection, Brushes.Red);
+            outputService.WriteLine(rejection, Brushes.Red);
             return null;
         }
 
@@ -84,25 +68,25 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
         {
             // Bei jedem Start neu assemblieren: nur so koennen Zeilentabelle und Quelltext nicht
             // auseinanderlaufen, und der Debugger haelt nicht stillschweigend an der falschen Stelle.
-            _outputService.WriteLine($"Assemble {assemblerFile}...");
-            var artifacts = _buildService.Build(assemblerPath, project.FullPath);
+            outputService.WriteLine($"Assemble {assemblerFile}...");
+            var artifacts = buildService.Build(assemblerPath, project.FullPath);
             ReportDiagnostics(artifacts.Diagnostics);
 
 
-            _outputService.WriteLine("Detect SVNR...");
+            outputService.WriteLine("Detect SVNR...");
             var transport = SvnrPortLocator.Open(
-                _settingsService.GetSettingValue<string>(FEntwumsSvnrExtensionModule.SerialPortSetting));
+                settingsService.GetSettingValue<string>(FEntwumsSvnrExtensionModule.SerialPortSetting));
 
             // Was an der Hardware scheitert, sieht GDB nur als E01. Ohne diese Zeile steht in der
             // Debugger Console am Ende eine Meldung ueber Speicher, und der wahre Grund fehlt.
-            _stubService.Fault = message => _outputService.WriteLine(message, Brushes.Yellow);
+            stubService.Fault = message => outputService.WriteLine(message, Brushes.Yellow);
 
-            var port = _stubService.Start(transport, configuredPort);
-            _outputService.WriteLine($"Stub listening on localhost:{port}.");
+            var port = stubService.Start(transport, configuredPort);
+            outputService.WriteLine($"Stub listening on localhost:{port}.");
 
 
-            _outputService.WriteLine("Uploading the program to the SVNR...");
-            _stubService.LoadProgram(await File.ReadAllBytesAsync(artifacts.BinaryPath));
+            outputService.WriteLine("Uploading the program to the SVNR...");
+            stubService.LoadProgram(await File.ReadAllBytesAsync(artifacts.BinaryPath));
 
             var endpoint = $"localhost:{port}";
 
@@ -110,26 +94,26 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
             // Einstellung am Ende ein Wert, den niemand eingetragen hat - und genau das soll
             // sie nicht mehr sein.
             if (configuredPort == 0)
-                _settingsService.SetSettingValue(FEntwumsSvnrExtensionModule.RemoteEndpointSetting, endpoint);
+                settingsService.SetSettingValue(FEntwumsSvnrExtensionModule.RemoteEndpointSetting, endpoint);
 
             return new DebugLaunchRequest(GdbBackendId, artifacts.ElfPath, endpoint, project.FullPath,
-                CreateInitCommands(), CreateSVNRProfile());
+                CreateInitCommands(), CreateSvnrProfile());
         }
         catch (SocketException exception)
         {
             // Der haeufigste Fall bei fest eingetragenem Port: ihn haelt schon jemand - eine
             // vorige Sitzung, die noch nicht aufgeraeumt hat, oder ein fremdes Programm.
             var subject = configuredPort == 0 ? "No free port" : $"Port {configuredPort}";
-            _outputService.WriteLine($"{subject} could not be claimed: {exception.Message}", Brushes.Red);
-            _logger.Error(exception.Message, exception);
+            outputService.WriteLine($"{subject} could not be claimed: {exception.Message}", Brushes.Red);
+            logger.Error(exception.Message, exception);
             return null;
         }
         catch (Exception exception)
         {
             // Aufgeraeumt wird nicht hier: Der Kern ruft CleanupAsync, sobald die Vorbereitung
             // ohne Sitzung endet. Das ist derselbe Weg wie beim regulaeren Sitzungsende.
-            _outputService.WriteLine($"Debug start failed: {exception.Message}", Brushes.Red);
-            _logger.Error(exception.Message, exception);
+            outputService.WriteLine($"Debug start failed: {exception.Message}", Brushes.Red);
+            logger.Error(exception.Message, exception);
             return null;
         }
     }
@@ -139,46 +123,53 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
         port = 0;
         rejection = string.Empty;
 
-        var value = endpoint?.Trim() ?? string.Empty;
-        if (value.Length == 0)
+        // 1. Leere Eingabe ist valide (Default-Verhalten)
+        var input = endpoint?.Trim() ?? string.Empty;
+        if (input.Length == 0)
             return true;
 
-        var separator = value.LastIndexOf(':');
-        var host = separator < 0 ? string.Empty : value[..separator].Trim();
-        var portText = separator < 0 ? value : value[(separator + 1)..].Trim();
+        // 2. Host und Port trennen (Format: "host:port" oder nur "port")
+        var lastColonIndex = input.LastIndexOf(':');
+        var host = lastColonIndex < 0 ? string.Empty : input[..lastColonIndex].Trim();
+        var portText = lastColonIndex < 0 ? input : input[(lastColonIndex + 1)..].Trim();
 
+        // 3. Port validieren (muss Zahl im Bereich 0-65535 sein)
         if (!int.TryParse(portText, out port) || port is < 0 or > 65535)
         {
-            port = 0;
             rejection = $"Invalid port: {portText}";
+            port = 0;
             return false;
         }
 
+        // 4. Host validieren (nur Loopback erlaubt)
         if (IsLoopback(host))
             return true;
 
-        port = 0;
         rejection = $"Invalid host: {host}";
+        port = 0;
         return false;
     }
 
     private static bool IsLoopback(string host)
     {
-        return host.Length == 0 || host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || host is "127.0.0.1" or "::1" or "[::1]";
-    }
+        // Leerer Host gilt als Loopback (Default-Verhalten)
+        if (host.Length == 0)
+            return true;
 
-    /// <summary>
-    /// Ohne diesen Rueckweg bliebe der COM-Port nach dem Ende der Sitzung belegt, und der
-    /// naechste Start scheiterte an einer Schnittstelle, die niemand mehr haelt.
-    /// </summary>
+        // Explizite Loopback-Adressen
+        return host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+               || host is "127.0.0.1" or "::1" or "[::1]";
+    }
+    
+    
     public Task CleanupAsync()
     {
-        // Laeuft auch dann, wenn gar nichts hochgefahren wurde - etwa weil schon der Assembler
-        // aufgab. Dann ist hier nichts zu tun.
-        if (!_stubService.IsRunning) return Task.CompletedTask;
+        // Nothing to clean up if the stub was never started
+        if (!stubService.IsRunning)
+            return Task.CompletedTask;
 
-        _stubService.Stop();
-        _outputService.WriteLine("Stub stopped, serial connection released.");
+        stubService.Stop(); // release serial port
+        outputService.WriteLine("Stub stopped, serial connection released.");
 
         return Task.CompletedTask;
     }
@@ -188,7 +179,7 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
         foreach (var diagnostic in diagnostics)
         {
             var colour = diagnostic.Severity == AssemblySeverity.Error ? Brushes.Red : Brushes.Yellow;
-            _outputService.WriteLine(diagnostic.ToString(), colour);
+            outputService.WriteLine(diagnostic.ToString(), colour);
         }
     }
     
@@ -197,12 +188,12 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
         return
         [
             "set architecture m68k", // Für Motorola
-            $"set tdesc filename {NormalizePath(RemoteStubService.TargetDescriptionPath())}",
+            $"set tdesc filename {NormalizePath(AccessAssetsUtil.TargetDescriptionPath())}",
             "set breakpoint always-inserted on"
         ];
     }
     
-    private DebugTargetProfile CreateSVNRProfile()
+    private DebugTargetProfile CreateSvnrProfile()
     {
         return new DebugTargetProfile
         {
@@ -210,7 +201,7 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
             Registers = SvnrRegisters(),
             MaxBreakpoints = SbdpConstants.MaxBreakpoints,
             HasCallStack = false,
-            AddressWatermark = "Wortadresse im SVNR-RAM, z. B. 0x0 - 0x3FF"
+            AddressWatermark = "Wortadresse im SVNR-RAM, z. B. 0x0"
         };
     }
     
@@ -230,7 +221,7 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
             };
 
             using var reader = XmlReader.Create(
-                RemoteStubService.TargetDescriptionPath(),
+                AccessAssetsUtil.TargetDescriptionPath(),
                 settings);
 
             var document = XDocument.Load(reader);
@@ -248,7 +239,7 @@ public sealed class SvnrDebugTargetPreparer : IDebugTargetPreparer
         }
         catch (Exception exception)
         {
-            _logger.Error(exception.Message, exception);
+            logger.Error(exception.Message, exception);
             return null;
         }
     }

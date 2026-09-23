@@ -5,9 +5,8 @@ using OneWare.UniversalFpgaProjectSystem.Models;
 
 namespace FEntwumS.SVNRExtension.Tools;
 
-public class SvnrSettingsHelper
+public static class SvnrSettingsHelper
 {
-    
     public const string DebugKitProperty = "DebugKit";
     public const string DebugKitValue = "SVNR";
     
@@ -17,7 +16,7 @@ public class SvnrSettingsHelper
             StringComparison.OrdinalIgnoreCase);
     }
     
-    public static Task UpdateProjectAsmFile(IProjectFile file)
+    public static Task UpdateProjectAsmFileAsync(IProjectFile file)
     // Hier soll der Grüne Harken in der UI gesetzt werden + die Datei als Quelle für Asssemblierung und Debugging genommen werden
     {
         if (file.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot)
@@ -47,21 +46,17 @@ public class SvnrSettingsHelper
 
     private static void UpdateProjectProperties(UniversalFpgaProjectRoot project, string? asmFile)
     {
-        var include = project.Properties.GetStringArray("include");
-        var hasAsmInclude = false;
-        if (include != null)
+        var includeProperty = project.Properties.GetStringArray("include");
+        var isAsmIncluded = false;
+        if (includeProperty != null)
         {
-            foreach (var entry in include)
+            if (includeProperty.Any(entry => entry == "*.asm"))
             {
-                if (entry == "*.asm")
-                {
-                    hasAsmInclude = true;
-                    break;
-                }
+                isAsmIncluded = true;
             }
         }
 
-        if (!hasAsmInclude)
+        if (!isAsmIncluded)
             project.Properties.AddToStringArray("include", "*.asm");
 
         // In der Projektdatei steht immer der Schraegstrich -> sie wandert zwischen Systemen,

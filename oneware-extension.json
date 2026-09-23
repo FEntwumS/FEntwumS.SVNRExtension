@@ -327,6 +327,14 @@
           "target": "all"
         }
       ]
+    },
+    {
+      "version": "0.4.33",
+      "targets": [
+        {
+          "target": "all"
+        }
+      ]
     }
   ]
 }

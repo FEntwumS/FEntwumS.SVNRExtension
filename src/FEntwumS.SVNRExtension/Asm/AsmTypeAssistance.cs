@@ -1,8 +1,7 @@
-using FEntwumS.SVNRExtension.Asm;
 using OneWare.Essentials.LanguageService;
 using OneWare.Essentials.ViewModels;
 
-namespace FEntwumS.SVNRExtension;
+namespace FEntwumS.SVNRExtension.Asm;
 
 public class AsmTypeAssistance : TypeAssistanceBase
 {

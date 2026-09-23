@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.Input;
+using FEntwumS.SVNRExtension.Asm;
 using FEntwumS.SVNRExtension.Services;
 using FEntwumS.SVNRExtension.Templates;
 using FEntwumS.SVNRExtension.Tools;

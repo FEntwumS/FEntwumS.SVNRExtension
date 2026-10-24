@@ -20,7 +20,7 @@ public void FillTemplate(UniversalFpgaProjectRoot root)
         var name = root.Header.Replace(" ", "");
         TemplateHelper.CopyDirectoryAndReplaceString(path, root.FullPath, ("%PROJECTNAME%", name));
         var topEntity = root.AddFile("top" + ".vhd");
-        var asmFile = root.AddFile(Path.Combine("asm", "LED_Example.asm"));
+        var asmFile = root.AddFile(Path.Combine("asm", "wave.asm"));
 
         root.TopEntity = "top.vhd";
         root.Properties.SetString("vhdlStandard", "93c");

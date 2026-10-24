@@ -102,39 +102,68 @@ begin
                     end if;
                 
                 WHEN z_ADD => 
-                    breakpoints(s_empty_index) <= i_breakpoint_value;
-                    number_breakpoints <= number_breakpoints + 1;
+                    -- Only write when a free slot is actually known. Without this check
+                    -- s_empty_index could still be -1 and the array access would be out of range.
+                    if s_empty_index >= 0 then
+                        breakpoints(s_empty_index) <= i_breakpoint_value;
+                        number_breakpoints <= number_breakpoints + 1;
+                    end if;
+
+                    -- The exit is outside any condition, so this state is always left.
                     fsm_state_bp_controller <= z_SEARCH_EMPTY;
 
                 WHEN z_SEARCH_EMPTY => 
-                    -- find next empty index after inserting the new bp
-                    if (number_breakpoints >= ARRAY_LENGTH) then 
-                        s_empty_index <= -1;
-                        fsm_state_bp_controller <= z_HALT;
-                    else
-                        for i in 0 to ARRAY_LENGTH -1 loop
-                            if breakpoints(i) = X"FFFF" then
-                                s_empty_index <=  i;
-                                edit_done <= '1';
-                                fsm_state_bp_controller <= z_HALT;
-                                exit;
-                            end if;
-                        end loop;
-                    end if;
+                    -- Find the next empty index after inserting the new bp.
+                    -- Start with "no slot free"; the loop overwrites this when it finds one.
+                    -- Within one clock cycle the last assignment wins, so this order is correct.
+                    s_empty_index <= -1;
+
+                    for i in 0 to ARRAY_LENGTH - 1 loop
+                        if breakpoints(i) = X"FFFF" then
+                            s_empty_index <= i;
+                            exit;
+                        end if;
+                    end loop;
+
+                    -- Acknowledge and leave, both outside the loop.
+                    --
+                    -- Before, edit_done was only set when another free slot was found. The 16th
+                    -- breakpoint fills the table, so no slot was left, no acknowledgement was
+                    -- sent, and the decoder answered ERR_NO_SPACE - even though z_ADD had
+                    -- already written the breakpoint. It sat in the table without the host
+                    -- knowing about it, and was never cleaned up.
+                    --
+                    -- The old "number_breakpoints >= ARRAY_LENGTH" branch is gone. The array
+                    -- itself now decides whether a slot is free, so the counter can no longer
+                    -- disagree with it.
+                    edit_done <= '1';
+                    fsm_state_bp_controller <= z_HALT;
 
                 WHEN z_DELETE =>
-                    -- empty_index := -1;
-                    -- edit_done <= '0';
-                    for i in 0 to ARRAY_LENGTH -1 loop
+                    -- Look for the breakpoint and free its slot.
+                    for i in 0 to ARRAY_LENGTH - 1 loop
                         if breakpoints(i) = i_breakpoint_value and i_breakpoint_value /= X"FFFF" then
                             breakpoints(i) <= X"FFFF";
                             s_empty_index <= i;
                             number_breakpoints <=  number_breakpoints - 1;
-                            edit_done <= '1';
-                            fsm_state_bp_controller <= z_HALT;
                             exit;
                         end if;
                     end loop;
+
+                    -- Acknowledge and leave, both outside the loop.
+                    --
+                    -- Before, both lines sat inside the "found" branch. Deleting an address
+                    -- that was not in the table left the state machine in z_DELETE forever:
+                    -- the same search ran again on every clock with the same result. z_ADD is
+                    -- only reachable from z_HALT, so adding a breakpoint was dead from then on,
+                    -- and no command could bring it back - this process has no reset input, so
+                    -- only reconfiguring the FPGA helped.
+                    --
+                    -- Deleting is idempotent now: "not in the table" means "already done".
+                    -- The decoder therefore never answers ERR_BP_NOT_FOUND any more.
+                    edit_done <= '1';
+                    fsm_state_bp_controller <= z_HALT;
+
             END CASE;
         end if;
 

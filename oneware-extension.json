@@ -3,7 +3,7 @@
   "type": "Plugin",
   "name": "SVNR Extension",
   "id": "FEntwumS.SVNRExtension",
-  "description": "Assembly conversion Tool for a SVNR",
+  "description": "Assembler, loader and debugger for the SVNR",
   "license": "MIT",
   "iconUrl": "https://raw.githubusercontent.com/FEntwumS/FEntwumS.SVNRExtension/main/Icon.png",
   "tabs": [

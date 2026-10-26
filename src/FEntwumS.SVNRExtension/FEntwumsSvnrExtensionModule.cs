@@ -123,7 +123,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         Id = "gdb",
         Type = "NativeTool",
         Name = "GNU Debugger",
-        Description = "GNU Debugger for remote debugging via gdbserver.",
+        Description = "GNU Debugger for debugging via gdbserver.",
         License = "GPL 3.0",
         // Archer Fish, das GDB-Maskottchen. Liegt als Kopie im eigenen Repo, damit das Icon nicht
         // verschwindet, wenn sourceware.org die Datei verschiebt.

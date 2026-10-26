@@ -148,7 +148,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
         [
             new PackageVersion
             {
-                Version = "1.0.2",
+                Version = "1.0.3",
                 Targets =
                 [
                     new PackageTarget
@@ -156,7 +156,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                         Target = "win-x64",
                         
                         Url =
-                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.2/gdb-windows-x86_64.zip",
+                            "https://github.com/FEntwumS/GDB/releases/download/v0.4.0/gdb-windows-x86_64.zip",
                             //"https://github.com/adamrehn/gdb-multiarch-windows/releases/download/gdb-11.2/gdb-11.2.zip", //GDB 11.2 --enable-targets=all akzeptiert keine target.xml
                         AutoSetting =
                         [
@@ -172,12 +172,12 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                         Target = "linux-x64",
                         Url =
                            //"https://github.com/guyush1/gdb-static/releases/download/v17.1-static/gdb-static-full-x86_64.tar.gz"
-                             "https://github.com/FEntwumS/GDB/releases/download/v0.3.2/gdb-linux-x86_64-py.tar.gz",
+                             "https://github.com/FEntwumS/GDB/releases/download/v0.4.0/gdb-linux-x86_64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "bin/gdb-multiarch-py",
+                                RelativePath = "bin/gdb-multiarch",
                                 SettingKey = GdbPathSetting
                                 
                             }
@@ -187,12 +187,12 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
                     {
                         Target = "osx-arm64",
                         Url =
-                            "https://github.com/FEntwumS/GDB/releases/download/v0.3.2/gdb-macos-arm64-py.tar.gz",
+                            "https://github.com/FEntwumS/GDB/releases/download/v0.4.0/gdb-macos-arm64.tar.gz",
                         AutoSetting =
                         [
                             new PackageAutoSetting
                             {
-                                RelativePath = "bin/gdb-multiarch-py",
+                                RelativePath = "bin/gdb-multiarch",
                                 SettingKey = GdbPathSetting
                             }
                         ]

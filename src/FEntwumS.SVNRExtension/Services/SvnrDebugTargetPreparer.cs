@@ -47,7 +47,7 @@ public sealed class SvnrDebugTargetPreparer(
         if (assemblerFile == "none") // Wenn keine Assemblerdatei 
         {
             outputService.WriteLine(
-                "No *.asm-File registered to compile. Choose File in project Tree and call 'Use this file to Compile'.", Brushes.Red);
+                "No .asm file registered for assembling. Choose a file in the project tree and select 'Use this file to assemble'.", Brushes.Red);
             return null;
         }
 

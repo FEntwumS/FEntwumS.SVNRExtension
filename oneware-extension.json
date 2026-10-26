@@ -351,6 +351,14 @@
           "target": "all"
         }
       ]
+    },
+    {
+      "version": "0.4.36",
+      "targets": [
+        {
+          "target": "all"
+        }
+      ]
     }
   ]
 }

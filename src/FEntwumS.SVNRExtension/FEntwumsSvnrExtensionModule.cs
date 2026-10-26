@@ -100,7 +100,7 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
             }
         });
         
-        fpgaService.RegisterProjectEntryModification(x =>
+        Action<IProjectEntry> markAsmFile = x =>
         {
             if (x.Root is not UniversalFpgaProjectRoot universalFpgaProjectRoot) return;
             if (!(x is IProjectFile file && file.Extension == ".asm")) return;
@@ -112,9 +112,25 @@ public class FEntwumsSvnrExtensionModule : OneWareModuleBase
             {
                 x.Icon?.RemoveOverlay("ConstraintFile");
             }
-        });
+        };
+        fpgaService.RegisterProjectEntryModification(markAsmFile);
+
+        foreach (var root in projectExplorerService.Projects.OfType<UniversalFpgaProjectRoot>())
+            AttachAsmFileMarker(root, markAsmFile);
+
+        projectExplorerService.Projects.CollectionChanged += (_, e) =>
+        {
+            foreach (var root in e.NewItems?.OfType<UniversalFpgaProjectRoot>() ?? [])
+                AttachAsmFileMarker(root, markAsmFile);
+        };
         fpgaService.RegisterTemplate<SvnrTemplate>();
 
+    }
+
+    private static void AttachAsmFileMarker(UniversalFpgaProjectRoot root, Action<IProjectEntry> markAsmFile)
+    {
+        root.RegisterProjectEntryModification(markAsmFile);
+        root.InvalidateAllModifications();
     }
 
     public static readonly Package GdbPackage = new()
